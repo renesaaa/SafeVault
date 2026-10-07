@@ -1,7 +1,13 @@
 from flask import Flask, request, jsonify
 from database import initialize_database, get_connection
+from werkzeug.utils import secure_filename
+from pathlib import Path
 
 app = Flask(__name__)
+BASE_DIR = Path(__file__).resolve().parent
+UPLOAD_FOLDER = BASE_DIR / "uploads"
+
+UPLOAD_FOLDER.mkdir(exist_ok=True)
 
 # Make sure the database exists
 initialize_database()
@@ -87,6 +93,30 @@ def get_evidence():
         })
 
     return jsonify(evidence_list)
+@app.route("/api/upload", methods=["POST"])
+def upload_file():
+    if "file" not in request.files:
+        return jsonify({
+            "error": "No file uploaded"
+        }), 400
+
+    file = request.files["file"]
+
+    if file.filename == "":
+        return jsonify({
+            "error": "No file selected"
+        }), 400
+
+    filename = secure_filename(file.filename)
+
+    file_path = UPLOAD_FOLDER / filename
+
+    file.save(file_path)
+
+    return jsonify({
+        "message": "File uploaded successfully!",
+        "filename": filename
+    }), 201
 
 
 if __name__ == "__main__":
