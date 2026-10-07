@@ -2,6 +2,7 @@ from flask import Flask, request, jsonify
 from database import initialize_database, get_connection
 from werkzeug.utils import secure_filename
 from pathlib import Path
+from ai import analyze_text
 
 app = Flask(__name__)
 BASE_DIR = Path(__file__).resolve().parent
@@ -118,6 +119,52 @@ def upload_file():
         "filename": filename
     }), 201
 
+@app.route("/api/analyze-evidence", methods=["POST"])
+def analyze_evidence():
 
+    data = request.get_json()
+
+    text = data.get("text")
+
+    if not text:
+        return jsonify({
+            "error": "Evidence text is required"
+        }), 400
+
+    # Send the evidence to Gemini
+    analysis = analyze_text(text)
+
+    # Get optional information from the request
+    filename = data.get("filename", "text-evidence")
+    evidence_type = data.get("evidence_type", "text")
+
+    # Save AI analysis to database
+    connection = get_connection()
+    cursor = connection.cursor()
+
+    cursor.execute("""
+        INSERT INTO evidence
+        (filename, evidence_type, incident_date, category, severity, summary)
+        VALUES (?, ?, ?, ?, ?, ?)
+    """, (
+        filename,
+        evidence_type,
+        analysis.get("incident_date"),
+        analysis.get("category"),
+        analysis.get("severity"),
+        analysis.get("summary")
+    ))
+
+    connection.commit()
+
+    new_id = cursor.lastrowid
+
+    connection.close()
+
+    return jsonify({
+        "message": "Evidence analyzed and saved successfully!",
+        "id": new_id,
+        "analysis": analysis
+    }), 201
 if __name__ == "__main__":
     app.run(debug=True)
