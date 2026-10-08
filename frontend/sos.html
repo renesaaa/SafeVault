@@ -1,0 +1,1273 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>SafeVault — Safety</title>
+
+    <link
+        href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Syne:wght@500;600;700&display=swap"
+        rel="stylesheet"
+    >
+
+    <link
+        rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"
+    >
+
+    <style>
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            background: #0F0B10;
+            color: #FFF5F7;
+            font-family: "Plus Jakarta Sans", sans-serif;
+        }
+
+        .app {
+            width: 100%;
+            max-width: 430px;
+            min-height: 100vh;
+            margin: auto;
+            padding: 22px 18px 40px;
+        }
+
+        /* HEADER */
+
+        .header {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            margin-bottom: 24px;
+        }
+
+        .back {
+            width: 42px;
+            height: 42px;
+            border-radius: 14px;
+            border: 1px solid rgba(255,255,255,.08);
+            background: rgba(255,255,255,.04);
+            color: #FFF5F7;
+            font-size: 22px;
+            cursor: pointer;
+        }
+
+        .header small {
+            color: #7F6F79;
+            font-size: 10px;
+            letter-spacing: 1px;
+        }
+
+        .header h1 {
+            font-family: "Syne", sans-serif;
+            margin: 3px 0 0;
+            font-size: 25px;
+        }
+
+        /* WARNING */
+
+        .warning-card {
+            background: rgba(244,63,94,.08);
+            border: 1px solid rgba(244,63,94,.18);
+            border-radius: 22px;
+            padding: 20px;
+            text-align: center;
+            margin-bottom: 18px;
+        }
+
+        .warning-card h2 {
+            font-family: "Syne", sans-serif;
+            margin: 0 0 7px;
+            font-size: 21px;
+        }
+
+        .warning-card p {
+            margin: 0;
+            color: #C4B5BE;
+            font-size: 12px;
+            line-height: 1.6;
+        }
+
+        /* SOS BUTTON */
+
+        .sos-area {
+            display: flex;
+            justify-content: center;
+            padding: 15px 0 22px;
+        }
+
+        #sos {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            border: 8px solid rgba(244,63,94,.12);
+            background: #F43F5E;
+            color: white;
+            font-family: "Syne", sans-serif;
+            font-size: 25px;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow:
+                0 0 0 8px rgba(244,63,94,.08),
+                0 15px 40px rgba(244,63,94,.18);
+            transition: transform .15s ease;
+        }
+
+        #sos:active {
+            transform: scale(.96);
+        }
+
+        #sos small {
+            display: block;
+            font-family: "Plus Jakarta Sans", sans-serif;
+            font-size: 10px;
+            font-weight: 500;
+            margin-top: 4px;
+            opacity: .85;
+        }
+
+        /* STATUS */
+
+        #status {
+            text-align: center;
+            color: #7F6F79;
+            font-size: 11px;
+            margin-bottom: 16px;
+        }
+
+        /* CARDS */
+
+        .card {
+            background: rgba(255,255,255,.035);
+            border: 1px solid rgba(255,255,255,.07);
+            border-radius: 20px;
+            padding: 17px;
+            margin-bottom: 13px;
+        }
+
+        .card-title {
+            font-family: "Syne", sans-serif;
+            font-size: 16px;
+            margin-bottom: 13px;
+        }
+
+        .help-button {
+            width: 100%;
+            border: 1px solid rgba(255,255,255,.08);
+            border-radius: 14px;
+            padding: 13px;
+            margin-top: 8px;
+            background: rgba(255,255,255,.035);
+            color: #FFF5F7;
+            text-align: left;
+            cursor: pointer;
+            font-family: inherit;
+        }
+
+        .help-button strong {
+            display: block;
+            font-size: 13px;
+        }
+
+        .help-button span {
+            display: block;
+            color: #7F6F79;
+            font-size: 10px;
+            margin-top: 3px;
+        }
+
+        .help-button:hover {
+            border-color: rgba(244,63,94,.35);
+        }
+
+        /* MAP */
+
+        #map {
+            height: 210px;
+            border-radius: 15px;
+            overflow: hidden;
+            margin-top: 10px;
+        }
+
+        /* ROUTE */
+
+        .route-buttons button {
+            width: 100%;
+            border: 0;
+            border-radius: 13px;
+            padding: 13px;
+            margin-top: 8px;
+            background: #F43F5E;
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .route-buttons button.secondary {
+            background: transparent;
+            border: 1px solid rgba(255,255,255,.1);
+            color: #FDA4AF;
+        }
+
+        /* LOG */
+
+        #log {
+            display: none;
+            color: #C4B5BE;
+            font-size: 11px;
+            line-height: 1.7;
+        }
+
+        #log div {
+            padding: 7px 0;
+            border-bottom: 1px solid rgba(255,255,255,.06);
+        }
+
+        /* FULL SCREEN ALERT */
+
+        .full {
+            position: fixed;
+            inset: 0;
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 24px;
+            z-index: 9999;
+        }
+
+        #ov {
+            background: #B5123D;
+        }
+
+        #chk {
+            background: #21151D;
+        }
+
+        .full h1 {
+            font-family: "Syne", sans-serif;
+            font-size: 30px;
+            margin: 0 0 10px;
+        }
+
+        .full p {
+            font-size: 15px;
+            line-height: 1.6;
+            max-width: 320px;
+            color: #FFF5F7;
+        }
+
+        .full button {
+            width: min(320px, 100%);
+            border: 0;
+            border-radius: 14px;
+            padding: 14px;
+            margin-top: 10px;
+            background: white;
+            color: #B5123D;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        .full button.ghost {
+            background: transparent;
+            color: white;
+            border: 1px solid rgba(255,255,255,.5);
+        }
+
+        @media (min-width: 700px) {
+            body {
+                padding: 30px 0;
+            }
+
+            .app {
+                background: #0F0B10;
+                border-radius: 30px;
+            }
+        }
+
+    </style>
+</head>
+
+
+<body>
+
+<div class="app">
+
+    <!-- HEADER -->
+
+    <header class="header">
+
+        <button
+            class="back"
+            onclick="window.location.href='index.html'"
+        >
+            ‹
+        </button>
+
+        <div>
+            <small>PRIVATE SAFETY</small>
+            <h1>Emergency Help</h1>
+        </div>
+
+    </header>
+
+
+    <!-- WARNING -->
+
+    <section class="warning-card">
+
+        <h2>Are you feeling unsafe?</h2>
+
+        <p>
+            Press and hold the button below when you need
+            immediate assistance.
+        </p>
+
+    </section>
+
+
+    <!-- SOS -->
+
+    <div class="sos-area">
+
+        <button id="sos">
+            SOS
+            <small>PRESS & HOLD</small>
+        </button>
+
+    </div>
+
+
+    <div id="status">
+        Connecting to safety network...
+    </div>
+
+
+    <!-- EMERGENCY CONTACTS -->
+
+    <section class="card">
+
+        <div class="card-title">
+            Emergency Help
+        </div>
+
+        <button
+            class="help-button"
+            onclick="window.location.href='tel:112'"
+        >
+            <strong>🚨 Police / Emergency — 112</strong>
+            <span>Open emergency call</span>
+        </button>
+
+        <button
+            class="help-button"
+            onclick="window.location.href='tel:181'"
+        >
+            <strong>♡ Women Helpline — 181</strong>
+            <span>Open women's helpline</span>
+        </button>
+
+        <button
+            class="help-button"
+            onclick="messageTrustedContact()"
+        >
+            <strong>👭 Message Trusted Contact</strong>
+            <span>Prepare an emergency message</span>
+        </button>
+
+    </section>
+
+
+    <!-- LOCATION -->
+
+    <section class="card">
+
+        <div class="card-title">
+            Your Location
+        </div>
+
+        <p
+            id="locationText"
+            style="font-size:12px;color:#7F6F79;"
+        >
+            Location will only be requested when needed.
+        </p>
+
+        <button
+            class="help-button"
+            onclick="getLocation()"
+        >
+            <strong>📍 Share My Location</strong>
+            <span>Request your current location</span>
+        </button>
+
+        <div id="map"></div>
+
+    </section>
+
+
+    <!-- ROUTE LOCK -->
+
+    <section class="card">
+
+        <div class="card-title">
+            Route Safety
+        </div>
+
+        <p style="font-size:11px;color:#7F6F79;line-height:1.6;">
+            Lock a route and simulate a deviation for the
+            hackathon safety demonstration.
+        </p>
+
+        <div class="route-buttons">
+
+            <button id="start">
+                Lock Route & Start
+            </button>
+
+            <button
+                class="secondary"
+                id="dev"
+            >
+                Simulate Route Deviation
+            </button>
+
+        </div>
+
+    </section>
+
+
+    <!-- ACTIVITY -->
+
+    <section class="card">
+
+        <div class="card-title">
+            Activity
+        </div>
+
+        <div id="log"></div>
+
+    </section>
+
+</div>
+
+
+<!-- SOS RECEIVED -->
+
+<div id="ov" class="full">
+
+    <h1>SOS ALERT</h1>
+
+    <p id="ovt"></p>
+
+    <button id="help">
+        I'm coming to help
+    </button>
+
+    <button
+        id="close"
+        class="ghost"
+    >
+        Dismiss
+    </button>
+
+</div>
+
+
+<!-- ROUTE WARNING -->
+
+<div id="chk" class="full">
+
+    <h1>Route changed</h1>
+
+    <p>
+        Are you safe?
+
+        <br><br>
+
+        Alerting nearby users in
+        <b id="cd">10</b>s
+    </p>
+
+    <button id="safe">
+        I'm safe
+    </button>
+
+    <button
+        id="notsafe"
+        class="ghost"
+    >
+        I'm not safe
+    </button>
+
+</div>
+
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+
+
+<script>
+
+    /* =========================================
+       BASIC HELPERS
+       ========================================= */
+
+    const $ = id => document.getElementById(id);
+
+    const esc = s =>
+        String(s).replace(
+            /[&<>"]/g,
+            c => ({
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;'
+            }[c])
+        );
+
+
+    /* =========================================
+       DEVICE ID
+       ========================================= */
+
+    const me =
+        localStorage.sid ||
+        (localStorage.sid =
+            Math.random().toString(36).slice(2, 8));
+
+
+    /*
+       Demo room.
+
+       Later this can come from the backend.
+    */
+
+    const room = "safevault-demo-kjc";
+
+
+    /* =========================================
+       REALTIME SOS NETWORK
+       ========================================= */
+
+    let es;
+
+
+    function connect() {
+
+        try {
+
+            es = new EventSource(
+                "https://ntfy.sh/" +
+                room +
+                "/sse"
+            );
+
+            es.onopen = () => {
+
+                $("status").textContent =
+                    "Safety network connected.";
+
+            };
+
+            es.onerror = () => {
+
+                $("status").textContent =
+                    "Safety network reconnecting...";
+
+            };
+
+            es.onmessage = event => {
+
+                try {
+
+                    const data =
+                        JSON.parse(event.data);
+
+                    if (
+                        data.event === "message"
+                    ) {
+
+                        recv(
+                            JSON.parse(data.message)
+                        );
+
+                    }
+
+                } catch (error) {
+
+                    console.log(error);
+
+                }
+
+            };
+
+        } catch (error) {
+
+            $("status").textContent =
+                "Safety network unavailable.";
+
+        }
+
+    }
+
+
+    async function send(data) {
+
+        data.from = me;
+
+        data.name = "Demo User";
+
+        try {
+
+   const message =
+    "Emergency assistance has been requested. " +
+    "Location: " +
+    (data.lat && data.lng
+        ? data.lat.toFixed(5) + ", " + data.lng.toFixed(5)
+        : "Location unavailable");
+
+const mapUrl =
+    data.lat && data.lng
+        ? "https://www.google.com/maps?q=" +
+          data.lat + "," + data.lng
+        : "https://maps.google.com";
+
+const url =
+    "https://ntfy.sh/" + room +
+    "/publish?message=" + encodeURIComponent(message) +
+    "&title=SAFEVAULT%20SOS" +
+    "&priority=5" +
+    "&tags=warning" +
+    "&click=" + encodeURIComponent(mapUrl);
+await fetch(url);
+    return true;
+
+} catch (error) { 
+
+            alert(
+                "Internet connection required to send the alert."
+            );
+
+            return false;
+
+        }
+
+    }
+
+
+    /* =========================================
+       RECEIVE SOS
+       ========================================= */
+
+    function recv(data) {
+
+        if (data.from === me)
+            return;
+
+
+        if (data.type === "sos") {
+
+            let link = "";
+
+
+            if (
+                Number.isFinite(data.lat) &&
+                Number.isFinite(data.lng)
+            ) {
+
+                link =
+                    '<br><br><a style="color:#fff" href="https://maps.google.com/?q=' +
+                    Number(data.lat) +
+                    "," +
+                    Number(data.lng) +
+                    '" target="_blank">📍 Open location</a>';
+
+            }
+
+
+            $("ovt").innerHTML =
+                "<b>" +
+                esc(data.name) +
+                "</b> needs help." +
+                "<br><br>" +
+                esc(data.msg) +
+                link;
+
+
+            $("ov").style.display = "flex";
+
+
+            if (navigator.vibrate) {
+
+                navigator.vibrate(
+                    [500, 200, 500, 200, 500]
+                );
+
+            }
+
+        }
+
+
+        else if (data.type === "help") {
+
+            log(
+                esc(data.name) +
+                " is coming to help."
+            );
+
+            if (navigator.vibrate) {
+
+                navigator.vibrate(300);
+
+            }
+
+        }
+
+    }
+
+
+    /* =========================================
+       SOS ACTIVATION
+       ========================================= */
+
+    let holdTimer = null;
+    let holdStarted = false;
+
+
+    function startSOSHold() {
+
+        if (holdStarted)
+            return;
+
+        holdStarted = true;
+
+        $("sos").innerHTML =
+            "HOLD...<small>KEEP HOLDING</small>";
+
+
+        holdTimer =
+            setTimeout(
+                activateSOS,
+                1800
+            );
+
+    }
+
+
+    function cancelSOSHold() {
+
+        if (!holdStarted)
+            return;
+
+        clearTimeout(holdTimer);
+
+        holdStarted = false;
+
+        $("sos").innerHTML =
+            "SOS<small>PRESS & HOLD</small>";
+
+    }
+
+
+    $("sos").addEventListener(
+        "pointerdown",
+        startSOSHold
+    );
+
+    $("sos").addEventListener(
+        "pointerup",
+        cancelSOSHold
+    );
+
+    $("sos").addEventListener(
+        "pointerleave",
+        cancelSOSHold
+    );
+
+
+    async function activateSOS() {
+
+        holdStarted = false;
+
+        $("sos").innerHTML =
+            "SOS ACTIVE<small>HELP REQUESTED</small>";
+
+
+        const alertData = {
+
+            type: "sos",
+
+            msg:
+                "Emergency assistance requested."
+
+        };
+
+
+        if (navigator.geolocation) {
+
+            navigator.geolocation.getCurrentPosition(
+
+                position => {
+
+                    alertData.lat =
+                        position.coords.latitude;
+
+                    alertData.lng =
+                        position.coords.longitude;
+
+                    send(alertData);
+
+                    showSOSActivated();
+
+                },
+
+                () => {
+
+                    send(alertData);
+
+                    showSOSActivated();
+
+                },
+
+            {
+    enableHighAccuracy: false,
+    timeout: 15000,
+    maximumAge: 0
+}
+
+            );
+
+        } else {
+
+            await send(alertData);
+
+            showSOSActivated();
+
+        }
+
+    }
+
+
+    function showSOSActivated() {
+
+        log(
+            "SOS alert activated."
+        );
+
+        $("status").textContent =
+            "SOS active — help requested.";
+
+    }
+
+
+    /* =========================================
+       SOS RECEIVED ACTIONS
+       ========================================= */
+
+    $("help").onclick = async () => {
+
+        await send({
+            type: "help"
+        });
+
+        $("ov").style.display = "none";
+
+    };
+
+
+    $("close").onclick = () => {
+
+        $("ov").style.display = "none";
+
+    };
+
+
+    /* =========================================
+       LOCATION
+       ========================================= */
+
+    let currentLocation = null;
+
+
+    function getLocation() {
+
+        if (!navigator.geolocation) {
+
+            $("locationText").textContent =
+                "Location is not supported on this device.";
+
+            return;
+
+        }
+
+
+        $("locationText").textContent =
+            "Requesting location permission...";
+
+
+        navigator.geolocation.getCurrentPosition(
+
+            position => {
+
+                const lat =
+                    position.coords.latitude;
+
+                const lng =
+                    position.coords.longitude;
+
+
+                currentLocation = {
+                    lat,
+                    lng
+                };
+
+
+                $("locationText").innerHTML =
+                    "✓ Location detected<br>" +
+                    lat.toFixed(5) +
+                    ", " +
+                    lng.toFixed(5) +
+                    '<br><br><a href="https://maps.google.com/?q=' +
+                    lat +
+                    "," +
+                    lng +
+                    '" target="_blank" style="color:#FDA4AF;">Open in Maps →</a>';
+
+
+                map.setView(
+                    [lat, lng],
+                    16
+                );
+
+
+                if (marker) {
+
+                    marker.setLatLng(
+                        [lat, lng]
+                    );
+
+                } else {
+
+                    marker =
+                        L.marker(
+                            [lat, lng]
+                        ).addTo(map);
+
+                }
+
+            },
+
+            () => {
+
+                $("locationText").textContent =
+                    "Unable to access location.";
+
+            },
+
+            {
+                enableHighAccuracy: true,
+                timeout: 7000
+            }
+
+        );
+
+    }
+
+
+    /* =========================================
+       TRUSTED CONTACT MESSAGE
+       ========================================= */
+
+    function messageTrustedContact() {
+
+        let message =
+            "I may need help. Please check on me.";
+
+
+        if (currentLocation) {
+
+            const mapLink =
+                "https://maps.google.com/?q=" +
+                currentLocation.lat +
+                "," +
+                currentLocation.lng;
+
+
+            message +=
+                " My location: " +
+                mapLink;
+
+        }
+
+
+        window.location.href =
+            "sms:?body=" +
+            encodeURIComponent(message);
+
+    }
+
+
+    /* =========================================
+       MAP
+       ========================================= */
+
+    const defaultLocation =
+        [13.0585, 77.6430];
+
+
+    const map =
+        L.map("map").setView(
+            defaultLocation,
+            15
+        );
+
+
+    L.tileLayer(
+        "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+        {
+            maxZoom: 19,
+            attribution: "© OpenStreetMap"
+        }
+    ).addTo(map);
+
+
+    let marker = null;
+
+
+    /* =========================================
+       ROUTE DEMO
+       ========================================= */
+
+    const route = [
+
+        [13.0585, 77.6430],
+        [13.0595, 77.6440],
+        [13.0605, 77.6450],
+        [13.0615, 77.6458],
+        [13.0625, 77.6468]
+
+    ];
+
+
+    let line;
+    let dot;
+    let routeIndex = 0;
+    let routeTimer;
+    let countdownTimer;
+    let locked = false;
+
+
+    $("start").onclick = () => {
+
+        if (line)
+            map.removeLayer(line);
+
+        if (dot)
+            map.removeLayer(dot);
+
+
+        line =
+            L.polyline(
+                route,
+                {
+                    color: "#F43F5E",
+                    weight: 5
+                }
+            ).addTo(map);
+
+
+        dot =
+            L.circleMarker(
+                route[0],
+                {
+                    radius: 8,
+                    color: "#F43F5E",
+                    fillColor: "#F43F5E",
+                    fillOpacity: 1
+                }
+            ).addTo(map);
+
+
+        routeIndex = 0;
+
+        locked = true;
+
+        clearInterval(routeTimer);
+
+
+        routeTimer =
+            setInterval(() => {
+
+                routeIndex++;
+
+
+                if (
+                    routeIndex >=
+                    route.length
+                ) {
+
+                    clearInterval(
+                        routeTimer
+                    );
+
+                    log(
+                        "Route completed safely."
+                    );
+
+                    return;
+
+                }
+
+
+                dot.setLatLng(
+                    route[routeIndex]
+                );
+
+            }, 1500);
+
+
+        log(
+            "Safety route locked."
+        );
+
+    };
+
+
+    $("dev").onclick = () => {
+
+        if (!locked) {
+
+            alert(
+                "Lock the route first."
+            );
+
+            return;
+
+        }
+
+
+        clearInterval(routeTimer);
+
+
+        const position =
+            dot.getLatLng();
+
+
+        dot.setLatLng([
+            position.lat + 0.0025,
+            position.lng - 0.002
+        ]);
+
+
+        map.panTo(
+            dot.getLatLng()
+        );
+
+
+        let seconds = 10;
+
+
+        $("cd").textContent =
+            seconds;
+
+
+        $("chk").style.display =
+            "flex";
+
+
+        clearInterval(
+            countdownTimer
+        );
+
+
+        countdownTimer =
+            setInterval(() => {
+
+                seconds--;
+
+                $("cd").textContent =
+                    seconds;
+
+
+                if (seconds <= 0) {
+
+                    clearInterval(
+                        countdownTimer
+                    );
+
+                    $("chk").style.display =
+                        "none";
+
+                    routeAlert();
+
+                }
+
+            }, 1000);
+
+    };
+
+
+    $("safe").onclick = () => {
+
+        clearInterval(
+            countdownTimer
+        );
+
+        $("chk").style.display =
+            "none";
+
+        log(
+            "Marked safe."
+        );
+
+    };
+
+
+    $("notsafe").onclick = () => {
+
+        clearInterval(
+            countdownTimer
+        );
+
+        $("chk").style.display =
+            "none";
+
+        routeAlert();
+
+    };
+
+
+    function routeAlert() {
+
+        send({
+            type: "sos",
+            msg:
+                "Route deviation detected. No safe response."
+        });
+
+
+        log(
+            "Route safety alert sent."
+        );
+
+    }
+
+
+    /* =========================================
+       START CONNECTION
+       ========================================= */
+
+    connect();
+
+</script>
+
+</body>
+</html>

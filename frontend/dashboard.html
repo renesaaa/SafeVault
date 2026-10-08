@@ -1,0 +1,823 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>SafeVault</title>
+
+    <link
+        href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Syne:wght@500;600;700&display=swap"
+        rel="stylesheet"
+    >
+
+    <style>
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #08070a;
+            color: #fff;
+            font-family: "DM Sans", sans-serif;
+        }
+
+        button,
+        input {
+            font-family: inherit;
+        }
+
+        button {
+            cursor: pointer;
+            border: none;
+        }
+
+        .app {
+            width: 100%;
+            max-width: 430px;
+            min-height: 100vh;
+            margin: auto;
+            padding: 22px 20px 100px;
+
+            background:
+                radial-gradient(
+                    circle at 50% 10%,
+                    rgba(244, 63, 94, 0.12),
+                    transparent 35%
+                ),
+                #0c0a0f;
+        }
+
+
+        /* HEADER */
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+
+            margin-bottom: 28px;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 11px;
+        }
+
+        .logo {
+            width: 43px;
+            height: 43px;
+
+            border-radius: 14px;
+
+            display: flex;
+            justify-content: center;
+            align-items: center;
+
+            background: linear-gradient(
+                135deg,
+                #fda4af,
+                #f43f5e
+            );
+
+            color: #220b12;
+            font-weight: 800;
+            font-size: 19px;
+        }
+
+        .brand small {
+            display: block;
+            color: #8e818b;
+            font-size: 10px;
+            margin-bottom: 2px;
+        }
+
+        .brand h1 {
+            font-family: "Syne", sans-serif;
+            font-size: 21px;
+        }
+
+        .lock {
+            width: 40px;
+            height: 40px;
+
+            border-radius: 50%;
+
+            background: #1d171f;
+            color: #fda4af;
+
+            font-size: 17px;
+        }
+
+
+        /* WELCOME */
+
+        .welcome-card {
+            padding: 22px;
+
+            border-radius: 24px;
+
+            background:
+                linear-gradient(
+                    135deg,
+                    rgba(244, 63, 94, 0.18),
+                    rgba(31, 22, 32, 0.95)
+                );
+
+            border: 1px solid #332630;
+
+            margin-bottom: 20px;
+        }
+
+        .welcome-card p {
+            color: #a99ca6;
+            font-size: 12px;
+            margin-bottom: 7px;
+        }
+
+        .welcome-card h2 {
+            font-family: "Syne", sans-serif;
+            font-size: 25px;
+            margin-bottom: 9px;
+        }
+
+        .welcome-card span {
+            color: #c8bac3;
+            font-size: 12px;
+            line-height: 1.5;
+        }
+
+
+        /* QUICK ACTIONS */
+
+        .section-title {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+
+            margin: 25px 2px 12px;
+        }
+
+        .section-title h3 {
+            font-family: "Syne", sans-serif;
+            font-size: 16px;
+        }
+
+        .section-title span {
+            font-size: 10px;
+            color: #786c75;
+        }
+
+        .actions {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+        }
+
+        .action {
+            min-height: 105px;
+
+            padding: 17px;
+
+            border-radius: 19px;
+
+            background: #171319;
+            border: 1px solid #2b242d;
+
+            color: white;
+
+            text-align: left;
+
+            transition: 0.2s;
+        }
+
+        .action:hover {
+            transform: translateY(-2px);
+            border-color: #f43f5e;
+        }
+
+        .action-icon {
+            width: 35px;
+            height: 35px;
+
+            border-radius: 11px;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            background: #251b23;
+            color: #fda4af;
+
+            margin-bottom: 12px;
+        }
+
+        .action strong {
+            display: block;
+            font-size: 12px;
+            margin-bottom: 4px;
+        }
+
+        .action small {
+            color: #80747d;
+            font-size: 9px;
+        }
+
+
+        /* UPLOAD */
+
+        .upload-box {
+            margin-top: 20px;
+
+            padding: 22px;
+
+            border-radius: 22px;
+
+            border: 1px dashed #4a3541;
+
+            background: rgba(23, 19, 25, 0.8);
+
+            text-align: center;
+        }
+
+        .upload-box h3 {
+            font-family: "Syne", sans-serif;
+            font-size: 16px;
+            margin-bottom: 7px;
+        }
+
+        .upload-box p {
+            color: #80747d;
+            font-size: 10px;
+            margin-bottom: 17px;
+        }
+
+        #fileInput {
+            display: none;
+        }
+
+        .upload-button {
+            display: inline-block;
+
+            padding: 11px 22px;
+
+            border-radius: 25px;
+
+            background: #f4728d;
+            color: #250c14;
+
+            font-size: 11px;
+            font-weight: 700;
+
+            cursor: pointer;
+        }
+
+        #uploadStatus {
+            margin-top: 13px;
+            font-size: 10px;
+            color: #fda4af;
+        }
+
+
+        /* EVIDENCE */
+
+        .evidence-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .evidence {
+            padding: 15px;
+
+            border-radius: 17px;
+
+            background: #171319;
+            border: 1px solid #29232b;
+        }
+
+        .evidence-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+
+            margin-bottom: 8px;
+        }
+
+        .evidence-name {
+            font-size: 12px;
+            font-weight: 600;
+
+            max-width: 65%;
+
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .severity {
+            padding: 5px 8px;
+
+            border-radius: 20px;
+
+            background: rgba(244, 63, 94, 0.12);
+            color: #fda4af;
+
+            font-size: 8px;
+        }
+
+        .evidence p {
+            color: #887b84;
+            font-size: 10px;
+            line-height: 1.5;
+        }
+
+        .evidence-meta {
+            display: flex;
+            justify-content: space-between;
+
+            margin-top: 10px;
+
+            color: #665c64;
+            font-size: 8px;
+        }
+
+
+        /* BOTTOM NAV */
+
+        .bottom-nav {
+            position: fixed;
+
+            bottom: 0;
+            left: 50%;
+
+            transform: translateX(-50%);
+
+            width: min(100%, 430px);
+
+            padding: 12px 18px;
+
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+
+            background: rgba(16, 13, 18, 0.96);
+
+            border-top: 1px solid #29232b;
+
+            backdrop-filter: blur(18px);
+        }
+
+        .nav-item {
+            background: transparent;
+            color: #756b74;
+
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+
+            gap: 5px;
+        }
+
+        .nav-item span {
+            font-size: 18px;
+        }
+
+        .nav-item small {
+            font-size: 8px;
+        }
+
+        .nav-item.active {
+            color: #fda4af;
+        }
+
+
+        /* DESKTOP */
+
+        @media (min-width: 700px) {
+
+            body {
+                display: flex;
+                justify-content: center;
+
+                padding: 25px;
+            }
+
+            .app {
+                min-height: 850px;
+                border-radius: 35px;
+
+                box-shadow:
+                    0 30px 80px rgba(0, 0, 0, 0.65);
+            }
+        }
+
+    </style>
+</head>
+
+
+<body>
+
+<div class="app">
+
+    <!-- HEADER -->
+
+    <header class="header">
+
+        <div class="brand">
+
+            <div class="logo">
+                S
+            </div>
+
+            <div>
+                <small>PRIVATE EVIDENCE VAULT</small>
+                <h1>SafeVault</h1>
+            </div>
+
+        </div>
+
+        <button class="lock">
+            ♢
+        </button>
+
+    </header>
+
+
+    <!-- WELCOME -->
+
+    <section class="welcome-card">
+
+        <p>YOUR PRIVATE SPACE</p>
+
+        <h2>Everything organized.</h2>
+
+        <span>
+            Securely collect, organize and understand
+            your evidence in one private place.
+        </span>
+
+    </section>
+
+
+    <!-- QUICK ACTIONS -->
+
+    <div class="section-title">
+
+        <h3>Quick Actions</h3>
+
+        <span>Secure tools</span>
+
+    </div>
+
+
+    <div class="actions">
+
+        <button
+            class="action"
+            onclick="document.getElementById('fileInput').click()"
+        >
+
+            <div class="action-icon">
+                +
+            </div>
+
+            <strong>Snap Photo</strong>
+
+            <small>
+                Add image evidence
+            </small>
+
+        </button>
+
+
+        <button
+            class="action"
+            onclick="document.getElementById('fileInput').click()"
+        >
+
+            <div class="action-icon">
+                ↑
+            </div>
+
+            <strong>Upload Evidence</strong>
+
+            <small>
+                Add a file
+            </small>
+
+        </button>
+
+
+        <button class="action">
+
+            <div class="action-icon">
+                ◉
+            </div>
+
+            <strong>Record Voice</strong>
+
+            <small>
+                Coming soon
+            </small>
+
+        </button>
+
+
+        <button class="action">
+
+            <div class="action-icon">
+                ✎
+            </div>
+
+            <strong>Crypt Note</strong>
+
+            <small>
+                Write a private note
+            </small>
+
+        </button>
+
+    </div>
+
+
+    <!-- HIDDEN FILE INPUT -->
+
+    <input
+        type="file"
+        id="fileInput"
+        accept="image/png,image/jpeg,image/webp"
+    >
+
+
+    <!-- UPLOAD AREA -->
+
+    <section class="upload-box">
+
+        <h3>Add Evidence</h3>
+
+        <p>
+            Upload a screenshot or photo.
+            Gemini will organize it automatically.
+        </p>
+
+        <label
+            for="fileInput"
+            class="upload-button"
+        >
+            Choose Image
+        </label>
+
+        <div id="uploadStatus"></div>
+
+    </section>
+
+
+    <!-- EVIDENCE -->
+
+    <div class="section-title">
+
+        <h3>Recent Evidence</h3>
+
+        <span id="evidenceCount">Loading...</span>
+
+    </div>
+
+
+    <section
+        id="evidenceList"
+        class="evidence-list"
+    >
+
+        <div class="evidence">
+
+            <p>Loading evidence...</p>
+
+        </div>
+
+    </section>
+
+
+    <!-- NAV -->
+
+    <nav class="bottom-nav">
+
+        <button class="nav-item active">
+
+            <span>⌂</span>
+            <small>Vault</small>
+
+        </button>
+
+
+        <button
+            class="nav-item"
+            onclick="window.location.href='index.html'"
+        >
+
+            <span>◫</span>
+            <small>Decoy</small>
+
+        </button>
+
+
+        <button class="nav-item">
+
+            <span>◉</span>
+            <small>Timeline</small>
+
+        </button>
+
+
+        <button class="nav-item" onclick="window.location.href='timeline.html'"></button>
+
+            <span>♙</span>
+            <small>Profile</small>
+
+        </button>
+
+    </nav>
+
+</div>
+
+
+<script>
+
+    const fileInput = document.getElementById("fileInput");
+    const uploadStatus = document.getElementById("uploadStatus");
+
+    fileInput.addEventListener("change", async function () {
+
+        const file = this.files[0];
+
+        if (!file) {
+            return;
+        }
+
+        uploadStatus.textContent = "Analyzing evidence with Gemini...";
+
+        const formData = new FormData();
+
+        formData.append("file", file);
+
+
+        try {
+
+            const response = await fetch("/api/upload", {
+                method: "POST",
+                body: formData
+            });
+
+
+            const result = await response.json();
+
+
+            if (!response.ok) {
+
+                throw new Error(
+                    result.error || "Upload failed"
+                );
+
+            }
+
+
+            uploadStatus.textContent =
+                "✓ Evidence analyzed and saved.";
+
+
+            loadEvidence();
+
+        } catch (error) {
+
+            console.error(error);
+
+            uploadStatus.textContent =
+                "Something went wrong. Please try again.";
+
+        }
+
+    });
+
+
+    async function loadEvidence() {
+
+        const evidenceList =
+            document.getElementById("evidenceList");
+
+        const evidenceCount =
+            document.getElementById("evidenceCount");
+
+
+        try {
+
+            const response =
+                await fetch("/api/evidence");
+
+            const evidence =
+                await response.json();
+
+
+            evidenceCount.textContent =
+                evidence.length + " items";
+
+
+            if (evidence.length === 0) {
+
+                evidenceList.innerHTML = `
+                    <div class="evidence">
+                        <p>No evidence added yet.</p>
+                    </div>
+                `;
+
+                return;
+
+            }
+
+
+            evidenceList.innerHTML =
+                evidence
+                .slice()
+                .reverse()
+                .slice(0, 5)
+                .map(item => `
+
+                    <div class="evidence">
+
+                        <div class="evidence-top">
+
+                            <div class="evidence-name">
+                                ${escapeHtml(item.filename)}
+                            </div>
+
+                            <div class="severity">
+                                ${escapeHtml(item.severity || "Unknown")}
+                            </div>
+
+                        </div>
+
+                        <p>
+                            ${escapeHtml(
+                                item.summary ||
+                                "No summary available."
+                            )}
+                        </p>
+
+                        <div class="evidence-meta">
+
+                            <span>
+                                ${escapeHtml(
+                                    item.category || "Other"
+                                )}
+                            </span>
+
+                            <span>
+                                ${escapeHtml(
+                                    item.incident_date ||
+                                    "No date"
+                                )}
+                            </span>
+
+                        </div>
+
+                    </div>
+
+                `)
+                .join("");
+
+
+        } catch (error) {
+
+            console.error(error);
+
+            evidenceList.innerHTML = `
+                <div class="evidence">
+                    <p>Unable to load evidence.</p>
+                </div>
+            `;
+
+        }
+
+    }
+
+
+    function escapeHtml(value) {
+
+        const div = document.createElement("div");
+
+        div.textContent = value ?? "";
+
+        return div.innerHTML;
+
+    }
+
+
+    // Load existing evidence when dashboard opens
+    loadEvidence();
+
+</script>
+
+</body>
+</html>

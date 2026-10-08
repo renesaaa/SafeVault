@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>SafeVault — Timeline</title>
+
+    <link
+        href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Syne:wght@500;600;700&display=swap"
+        rel="stylesheet"
+    >
+
+    <style>
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            min-height: 100vh;
+            background: #0F0B10;
+            color: #FFF5F7;
+            font-family: "Plus Jakarta Sans", sans-serif;
+        }
+
+        .app {
+            width: 100%;
+            max-width: 430px;
+            min-height: 100vh;
+            margin: auto;
+            padding: 24px 18px 100px;
+        }
+
+
+        /* HEADER */
+
+        .header {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            margin-bottom: 28px;
+        }
+
+        .back-button {
+            width: 42px;
+            height: 42px;
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 14px;
+            background: rgba(255,255,255,0.04);
+            color: #FFF5F7;
+            font-size: 22px;
+            cursor: pointer;
+        }
+
+        .header-text small {
+            color: #7F6F79;
+            font-size: 11px;
+        }
+
+        .header-text h1 {
+            font-family: "Syne", sans-serif;
+            font-size: 25px;
+            margin-top: 3px;
+        }
+
+
+        /* SUMMARY */
+
+        .summary-card {
+            background: linear-gradient(
+                135deg,
+                rgba(244,63,94,0.14),
+                rgba(244,114,182,0.06)
+            );
+
+            border: 1px solid rgba(244,63,94,0.18);
+            border-radius: 22px;
+            padding: 20px;
+            margin-bottom: 28px;
+        }
+
+        .summary-card small {
+            color: #C4B5BE;
+        }
+
+        .summary-number {
+            font-family: "Syne", sans-serif;
+            font-size: 34px;
+            margin-top: 5px;
+        }
+
+        .summary-label {
+            color: #7F6F79;
+            font-size: 12px;
+        }
+
+
+        /* TIMELINE */
+
+        .section-title {
+            font-family: "Syne", sans-serif;
+            font-size: 18px;
+            margin-bottom: 20px;
+        }
+
+        .timeline {
+            position: relative;
+        }
+
+        .timeline-item {
+            position: relative;
+            padding-left: 32px;
+            padding-bottom: 25px;
+        }
+
+        .timeline-item::before {
+            content: "";
+            position: absolute;
+            left: 7px;
+            top: 18px;
+            bottom: -2px;
+            width: 1px;
+            background: rgba(255,255,255,0.1);
+        }
+
+        .timeline-item:last-child::before {
+            display: none;
+        }
+
+        .timeline-dot {
+            position: absolute;
+            left: 0;
+            top: 4px;
+            width: 15px;
+            height: 15px;
+            border-radius: 50%;
+            background: #F43F5E;
+            box-shadow: 0 0 0 5px rgba(244,63,94,0.1);
+        }
+
+        .date {
+            color: #FDA4AF;
+            font-size: 12px;
+            margin-bottom: 7px;
+        }
+
+        .evidence-card {
+            background: rgba(255,255,255,0.035);
+            border: 1px solid rgba(255,255,255,0.07);
+            border-radius: 18px;
+            padding: 16px;
+        }
+
+        .evidence-top {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+        }
+
+        .category {
+            font-size: 15px;
+            font-weight: 700;
+        }
+
+        .severity {
+            font-size: 10px;
+            font-weight: 700;
+            padding: 5px 9px;
+            border-radius: 20px;
+            background: rgba(244,63,94,0.13);
+            color: #FDA4AF;
+        }
+
+        .summary {
+            color: #C4B5BE;
+            font-size: 12px;
+            line-height: 1.6;
+            margin-top: 10px;
+        }
+
+        .filename {
+            color: #7F6F79;
+            font-size: 10px;
+            margin-top: 10px;
+        }
+
+
+        /* EMPTY / ERROR */
+
+        .message {
+            text-align: center;
+            padding: 50px 20px;
+            color: #7F6F79;
+        }
+
+        .message-icon {
+            font-size: 35px;
+            margin-bottom: 12px;
+        }
+
+        .message p {
+            font-size: 13px;
+            line-height: 1.6;
+        }
+
+
+        /* BOTTOM NAV */
+
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: min(430px, 100%);
+            padding: 12px 16px 18px;
+            background: rgba(15,11,16,0.96);
+            backdrop-filter: blur(14px);
+            border-top: 1px solid rgba(255,255,255,0.06);
+            display: flex;
+            justify-content: space-around;
+        }
+
+        .nav-item {
+            border: none;
+            background: none;
+            color: #7F6F79;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+            cursor: pointer;
+        }
+
+        .nav-item.active {
+            color: #FDA4AF;
+        }
+
+        .nav-item span {
+            font-size: 19px;
+        }
+
+        .nav-item small {
+            font-size: 10px;
+        }
+
+
+        @media (min-width: 700px) {
+
+            body {
+                padding: 30px 0;
+            }
+
+            .app {
+                min-height: calc(100vh - 60px);
+                border-radius: 30px;
+                background: #0F0B10;
+            }
+        }
+
+    </style>
+
+</head>
+
+
+<body>
+
+    <div class="app">
+
+        <!-- HEADER -->
+
+        <header class="header">
+
+            <button
+                class="back-button"
+                onclick="window.location.href='dashboard.html'"
+            >
+                ‹
+            </button>
+
+            <div class="header-text">
+                <small>SAFEVAULT</small>
+                <h1>Evidence Timeline</h1>
+            </div>
+
+        </header>
+
+
+        <!-- SUMMARY -->
+
+        <section class="summary-card">
+
+            <small>Total evidence</small>
+
+            <div
+                class="summary-number"
+                id="evidenceCount"
+            >
+                —
+            </div>
+
+            <div class="summary-label">
+                Organized in chronological order
+            </div>
+
+        </section>
+
+
+        <!-- TIMELINE -->
+
+        <h2 class="section-title">
+            Incident History
+        </h2>
+
+        <div
+            class="timeline"
+            id="timeline"
+        >
+
+            <div class="message">
+
+                <div class="message-icon">
+                    ◌
+                </div>
+
+                <p>
+                    Loading your timeline...
+                </p>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- BOTTOM NAV -->
+
+    <nav class="bottom-nav">
+
+        <button
+            class="nav-item"
+            onclick="window.location.href='dashboard.html'"
+        >
+            <span>⌂</span>
+            <small>Vault</small>
+        </button>
+
+        <button class="nav-item active">
+            <span>◷</span>
+            <small>Timeline</small>
+        </button>
+
+        <button
+            class="nav-item"
+            onclick="window.location.href='index.html'"
+        >
+            <span>◫</span>
+            <small>Decoy</small>
+        </button>
+
+    </nav>
+
+
+    <script>
+
+        async function loadTimeline() {
+
+            const timeline = document.getElementById("timeline");
+            const evidenceCount =
+                document.getElementById("evidenceCount");
+
+            try {
+
+                const response =
+                    await fetch("/api/evidence");
+
+                if (!response.ok) {
+                    throw new Error("Failed to load evidence");
+                }
+
+                const evidence =
+                    await response.json();
+
+
+                evidenceCount.textContent =
+                    evidence.length;
+
+
+                if (evidence.length === 0) {
+
+                    timeline.innerHTML = `
+                        <div class="message">
+
+                            <div class="message-icon">
+                                ✦
+                            </div>
+
+                            <p>
+                                No evidence has been added yet.
+                            </p>
+
+                        </div>
+                    `;
+
+                    return;
+                }
+
+
+                /* Sort newest first */
+
+                evidence.sort((a, b) => {
+
+                    const dateA =
+                        new Date(a.incident_date || a.created_at);
+
+                    const dateB =
+                        new Date(b.incident_date || b.created_at);
+
+                    return dateB - dateA;
+
+                });
+
+
+                timeline.innerHTML =
+                    evidence.map(item => {
+
+                        const date =
+                            item.incident_date ||
+                            "Date unavailable";
+
+                        const category =
+                            item.category ||
+                            "Other";
+
+                        const severity =
+                            item.severity ||
+                            "Unknown";
+
+                        const summary =
+                            item.summary ||
+                            "No summary available.";
+
+                        const filename =
+                            item.filename ||
+                            "No file name";
+
+
+                        return `
+
+                            <article class="timeline-item">
+
+                                <div class="timeline-dot"></div>
+
+                                <div class="date">
+                                    ${escapeHtml(date)}
+                                </div>
+
+                                <div class="evidence-card">
+
+                                    <div class="evidence-top">
+
+                                        <div class="category">
+                                            ${escapeHtml(category)}
+                                        </div>
+
+                                        <div class="severity">
+                                            ${escapeHtml(severity)}
+                                        </div>
+
+                                    </div>
+
+                                    <p class="summary">
+                                        ${escapeHtml(summary)}
+                                    </p>
+
+                                    <div class="filename">
+                                        ${escapeHtml(filename)}
+                                    </div>
+
+                                </div>
+
+                            </article>
+
+                        `;
+
+                    }).join("");
+
+
+            } catch (error) {
+
+                console.error(error);
+
+                timeline.innerHTML = `
+
+                    <div class="message">
+
+                        <div class="message-icon">
+                            !
+                        </div>
+
+                        <p>
+                            Unable to load your evidence timeline.
+                        </p>
+
+                    </div>
+
+                `;
+
+            }
+
+        }
+
+
+        function escapeHtml(value) {
+
+            return String(value)
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+
+        }
+
+
+        loadTimeline();
+
+    </script>
+
+</body>
+
+</html>
