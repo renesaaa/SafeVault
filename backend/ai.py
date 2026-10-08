@@ -8,12 +8,20 @@ from google import genai
 
 load_dotenv()
 
-api_key = os.getenv("GEMINI_API_KEY")
+_client = None
 
-if not api_key:
-    raise ValueError("GEMINI_API_KEY not found in .env")
 
-client = genai.Client(api_key=api_key)
+def _get_client():
+    """Create the Gemini client on first use, so the web app can still boot
+    (lock screen, health check) if GEMINI_API_KEY is missing. The key comes
+    from the environment only and is never sent to the browser."""
+    global _client
+    if _client is None:
+        api_key = os.getenv("GEMINI_API_KEY")
+        if not api_key:
+            raise ValueError("GEMINI_API_KEY is not set on the server")
+        _client = genai.Client(api_key=api_key)
+    return _client
 
 
 def analyze_text(text):
@@ -38,7 +46,7 @@ Evidence:
 {text}
 """
 
-    response = client.models.generate_content(
+    response = _get_client().models.generate_content(
         model="gemini-3.5-flash",
         contents=prompt,
     )
@@ -83,7 +91,7 @@ Do not add explanations.
     with open(image_path, "rb") as image_file:
         image_data = image_file.read()
 
-    response = client.models.generate_content(
+    response = _get_client().models.generate_content(
         model="gemini-3.5-flash",
         contents=[
             prompt,

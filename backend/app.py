@@ -2,7 +2,7 @@ from flask import (
     Flask, request, jsonify, send_from_directory,
     session, redirect
 )
-from database import initialize_database, get_connection
+from database import initialize_database, get_connection, STORAGE_ROOT
 from werkzeug.utils import secure_filename
 from pathlib import Path
 from ai import analyze_text, analyze_image
@@ -15,6 +15,7 @@ import secrets
 import threading
 from datetime import datetime, timedelta
 from dotenv import load_dotenv
+from werkzeug.middleware.proxy_fix import ProxyFix
 
 
 app = Flask(
@@ -41,7 +42,7 @@ print(f"[SafeVault] .env path: {ENV_PATH} "
 #   SAFEVAULT_PIN         6-digit PIN (server side only, from .env)
 #   SECRET_KEY            signs the Flask session cookie (from .env)
 #   SAFEVAULT_SESSION_MINUTES   optional, default 120
-#   SAFEVAULT_COOKIE_SECURE     optional, set to 1 when served over HTTPS
+#   SAFEVAULT_COOKIE_SECURE     optional, 1/0; defaults to 1 on Render
 # ---------------------------------------------------------
 
 SECRET_KEY = os.getenv("SECRET_KEY")
@@ -54,12 +55,27 @@ if not SECRET_KEY:
     print("[SafeVault] WARNING: SECRET_KEY not set in .env - using a "
           "temporary random key (sessions reset on restart).")
 
+# On Render (which sets RENDER=true) the site is always served over HTTPS
+# behind a proxy, so default to Secure cookies and trust the proxy headers.
+# Both can be overridden with SAFEVAULT_COOKIE_SECURE / SAFEVAULT_TRUST_PROXY.
+_ON_RENDER = os.environ.get("RENDER") == "true"
+_cookie_secure_env = os.environ.get("SAFEVAULT_COOKIE_SECURE")
+COOKIE_SECURE = (_cookie_secure_env == "1") if _cookie_secure_env is not None else _ON_RENDER
+_trust_proxy_env = os.environ.get("SAFEVAULT_TRUST_PROXY")
+TRUST_PROXY = (_trust_proxy_env == "1") if _trust_proxy_env is not None else _ON_RENDER
+
+if TRUST_PROXY:
+    # Without this every visitor appears to come from the proxy's address,
+    # so one person's wrong PINs would lock out everybody.
+    app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1)
+
 app.config.update(
     SECRET_KEY=SECRET_KEY,
+    MAX_CONTENT_LENGTH=105 * 1024 * 1024,
     SESSION_COOKIE_NAME="safevault_session",
     SESSION_COOKIE_HTTPONLY=True,
     SESSION_COOKIE_SAMESITE="Lax",
-    SESSION_COOKIE_SECURE=os.environ.get("SAFEVAULT_COOKIE_SECURE") == "1",
+    SESSION_COOKIE_SECURE=COOKIE_SECURE,
     PERMANENT_SESSION_LIFETIME=timedelta(
         minutes=int(os.environ.get("SAFEVAULT_SESSION_MINUTES", "120") or 120)
     ),
@@ -94,6 +110,7 @@ PUBLIC_PATHS = {
     "/lock.html", "/security.js",  # lock screen + shared lock helper
     "/style.css", "/script.js",    # decoy assets
     "/favicon.ico",
+    "/health",                     # deployment health check (no data)
 }
 PUBLIC_API = {"/api/auth/unlock", "/api/auth/lock", "/api/auth/status"}
 LOCK_NEXT_ALLOWED = {"/dashboard.html", "/evidence.html", "/timeline.html"}
@@ -253,9 +270,11 @@ def auth_lock():
 
 
 BASE_DIR = Path(__file__).resolve().parent
-UPLOAD_FOLDER = BASE_DIR / "uploads"
+# Evidence files live in backend/uploads by default, or in
+# $SAFEVAULT_STORAGE_PATH/uploads when that variable is set.
+UPLOAD_FOLDER = (STORAGE_ROOT / "uploads") if STORAGE_ROOT else (BASE_DIR / "uploads")
 
-UPLOAD_FOLDER.mkdir(exist_ok=True)
+UPLOAD_FOLDER.mkdir(parents=True, exist_ok=True)
 
 
 # Make sure the database exists
@@ -277,6 +296,15 @@ def ensure_extra_columns():
 
 
 ensure_extra_columns()
+
+
+# ---------------------------------------------------------
+# HEALTH CHECK (public, returns no data)
+# ---------------------------------------------------------
+
+@app.route("/health", methods=["GET"])
+def health():
+    return jsonify({"status": "ok"})
 
 
 # ---------------------------------------------------------
@@ -857,5 +885,14 @@ def upload_evidence_file():
 # START FLASK
 # ---------------------------------------------------------
 
+# Production (Render) runs this app with Gunicorn - see render.yaml - and never
+# reaches this block. It is only for `python backend/app.py` during local
+# development. Debug mode is OFF unless you explicitly set SAFEVAULT_DEBUG=1.
 if __name__ == "__main__":
-    app.run(debug=True)
+    _port = int(os.environ.get("PORT", "5000"))
+    _host = "0.0.0.0" if os.environ.get("PORT") else "127.0.0.1"
+    app.run(
+        host=_host,
+        port=_port,
+        debug=os.environ.get("SAFEVAULT_DEBUG") == "1",
+    )
