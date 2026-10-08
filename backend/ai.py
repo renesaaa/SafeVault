@@ -1,7 +1,10 @@
 import os
 import json
+import mimetypes
+
 from dotenv import load_dotenv
 from google import genai
+
 
 load_dotenv()
 
@@ -72,6 +75,11 @@ Do not add markdown.
 Do not add explanations.
 """
 
+    mime_type, _ = mimetypes.guess_type(image_path)
+
+    if mime_type not in ["image/png", "image/jpeg", "image/webp"]:
+        mime_type = "image/png"
+
     with open(image_path, "rb") as image_file:
         image_data = image_file.read()
 
@@ -81,7 +89,7 @@ Do not add explanations.
             prompt,
             genai.types.Part.from_bytes(
                 data=image_data,
-                mime_type="image/png"
+                mime_type=mime_type
             )
         ],
     )

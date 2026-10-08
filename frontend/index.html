@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Bloom — Period Tracker</title>
+
+    <link rel="stylesheet" href="style.css">
+
+    <link
+        href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@500;600&display=swap"
+        rel="stylesheet"
+    >
+</head>
+
+<body>
+
+    <div class="app">
+
+        <!-- TOP BAR -->
+        <header class="topbar">
+
+            <div class="profile">
+                <div class="avatar">S</div>
+
+                <div>
+                    <p class="welcome">Welcome back!</p>
+                    <h1>Hello Sarah!</h1>
+                </div>
+            </div>
+
+            <button class="notification">
+                ♡
+                <span>5</span>
+            </button>
+
+        </header>
+
+
+        <!-- DATE -->
+        <section class="date-section">
+
+            <div class="month-row">
+                <h2>January 2025</h2>
+
+                <div class="arrows">
+                    <button>‹</button>
+                    <button>›</button>
+                </div>
+            </div>
+
+            <div class="days">
+
+                <div>
+                    <span>SUN</span>
+                    <strong>20</strong>
+                </div>
+
+                <div>
+                    <span>MON</span>
+                    <strong>21</strong>
+                </div>
+
+                <div class="active-day">
+                    <span>TUE</span>
+                    <strong>22</strong>
+                </div>
+
+                <div>
+                    <span>WED</span>
+                    <strong>23</strong>
+                </div>
+
+                <div>
+                    <span>THU</span>
+                    <strong>24</strong>
+                </div>
+
+                <div>
+                    <span>FRI</span>
+                    <strong>25</strong>
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- PERIOD CARD -->
+        <section class="period-card">
+
+            <div class="cycle-ring">
+
+                <div class="cycle-inner">
+
+                    <div class="uterus">♡</div>
+
+                    <p>Period Days</p>
+
+                    <strong>Day 27</strong>
+
+                </div>
+
+            </div>
+
+            <button class="log-period">
+                + Log Period
+            </button>
+
+        </section>
+
+
+        <!-- FLOW SELECTION -->
+        <section class="flow-section">
+
+            <div class="flow-heading">
+                <div>
+                    <small>Today's flow</small>
+                    <h2>How are you feeling?</h2>
+                </div>
+
+                <span class="flow-icon">♡</span>
+            </div>
+
+
+            <div class="flow-options">
+
+                <!-- LIGHT FLOW → SAFEVAULT -->
+                <button
+                    class="flow-option light-flow"
+                    onclick="openSafeVault()"
+                >
+                    <div class="flow-option-icon">
+                        ◌
+                    </div>
+
+                    <div class="flow-option-text">
+                        <strong>Light Flow</strong>
+                        <span>Feeling normal</span>
+                    </div>
+
+                    <span class="flow-arrow">›</span>
+                </button>
+
+
+                <!-- HEAVY FLOW → SOS -->
+                <button
+                    class="flow-option heavy-flow"
+                    onclick="openSOS()"
+                >
+                    <div class="flow-option-icon">
+                        ◉
+                    </div>
+
+                    <div class="flow-option-text">
+                        <strong>Heavy Flow</strong>
+                        <span>Need extra care</span>
+                    </div>
+
+                    <span class="flow-arrow">›</span>
+                </button>
+
+            </div>
+
+        </section>
+
+
+        <!-- PREGNANCY CARD -->
+        <section class="info-card">
+
+            <div class="info-icon">♧</div>
+
+            <div class="info-text">
+                <span>Chances Of Pregnancy</span>
+            </div>
+
+            <div class="status">
+                <span></span>
+                Low
+            </div>
+
+        </section>
+
+
+        <!-- NEXT PERIOD -->
+        <section class="next-period">
+
+            <div>
+                <small>Next Period</small>
+                <strong>March 21</strong>
+            </div>
+
+            <div class="days-left">
+                5 days
+            </div>
+
+        </section>
+
+
+        <!-- BOTTOM NAV -->
+        <nav class="bottom-nav">
+
+            <button class="nav-item active">
+                <span>⌂</span>
+                <small>Home</small>
+            </button>
+
+            <button class="nav-item">
+                <span>▣</span>
+                <small>Calendar</small>
+            </button>
+
+            <button class="nav-item">
+                <span>◉</span>
+                <small>Insights</small>
+            </button>
+
+            <!-- SAFEVAULT ACCESS -->
+            <button
+                class="nav-item"
+                onclick="openSafeVault()"
+            >
+                <span>♙</span>
+                <small>Profile</small>
+            </button>
+
+        </nav>
+
+    </div>
+
+
+    <script>
+
+        // Light Flow → SafeVault
+        function openSafeVault() {
+            window.location.href = "dashboard.html";
+        }
+
+
+        // Heavy Flow → SOS module
+        function openSOS() {
+            window.location.href = "sos.html";
+        }
+
+    </script>
+
+</body>
+</html>

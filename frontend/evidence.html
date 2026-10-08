@@ -1,0 +1,2869 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>SafeVault — Evidence</title>
+
+    <script src="security.js"></script>
+
+    <link
+        href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Syne:wght@500;600;700&display=swap"
+        rel="stylesheet"
+    >
+
+    <style>
+
+        /* Same palette as dashboard.html */
+        :root {
+            --bg: #08070a;
+            --surface: #0c0a0f;
+            --card: #171319;
+            --card-hi: #1d171f;
+            --field: #120e14;
+            --border: #29232b;
+            --border-hi: #3a2f3b;
+            --text: #ffffff;
+            --text-soft: #c8bac3;
+            --muted: #887b84;
+            --dim: #665c64;
+            --accent: #fda4af;
+            --accent-strong: #f4728d;
+            --on-accent: #250c14;
+            color-scheme: dark;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: var(--bg);
+            color: var(--text);
+            font-family: "DM Sans", sans-serif;
+        }
+
+        body.locked {
+            overflow: hidden;
+        }
+
+        button,
+        input,
+        select,
+        textarea {
+            font-family: inherit;
+            font-size: inherit;
+            color: inherit;
+        }
+
+        button {
+            cursor: pointer;
+            border: none;
+            background: none;
+        }
+
+        button:focus-visible,
+        input:focus-visible,
+        select:focus-visible,
+        textarea:focus-visible {
+            outline: 2px solid var(--accent);
+            outline-offset: 2px;
+        }
+
+        svg {
+            display: block;
+        }
+
+
+        /* ---------- LAYOUT ---------- */
+
+        .app {
+            width: 100%;
+            max-width: 430px;
+            min-height: 100vh;
+            min-height: 100dvh;
+            margin: auto;
+            padding: 22px 20px 110px;
+
+            background:
+                radial-gradient(
+                    circle at 50% 8%,
+                    rgba(244, 63, 94, 0.10),
+                    transparent 36%
+                ),
+                var(--surface);
+        }
+
+
+        /* ---------- HEADER ---------- */
+
+        .header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .icon-btn {
+            width: 40px;
+            height: 40px;
+            flex-shrink: 0;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            border-radius: 14px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            background: rgba(255, 255, 255, 0.04);
+            color: var(--text-soft);
+
+            transition: transform 0.15s ease, background 0.15s ease, color 0.15s ease;
+        }
+
+        .icon-btn:hover {
+            background: rgba(255, 255, 255, 0.08);
+            color: var(--text);
+        }
+
+        .icon-btn:active {
+            transform: scale(0.94);
+        }
+
+        .icon-btn[aria-pressed="true"] {
+            color: var(--accent);
+            border-color: rgba(253, 164, 175, 0.35);
+        }
+
+        .header-text {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .header-text h1 {
+            font-family: "Syne", sans-serif;
+            font-size: 22px;
+            line-height: 1.1;
+        }
+
+        .header-text p {
+            margin-top: 3px;
+            font-size: 12px;
+            color: var(--muted);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .add-btn {
+            height: 40px;
+            min-width: 40px;
+            padding: 0 12px;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 7px;
+
+            border-radius: 14px;
+            background: var(--accent-strong);
+            color: var(--on-accent);
+            font-size: 12px;
+            font-weight: 700;
+
+            transition: transform 0.15s ease, filter 0.15s ease;
+        }
+
+        .add-btn:hover {
+            transform: translateY(-1px);
+            filter: brightness(1.06);
+        }
+
+        .add-btn:active {
+            transform: scale(0.96);
+        }
+
+        .add-btn span {
+            display: none;
+        }
+
+
+        /* ---------- SEARCH ---------- */
+
+        .search {
+            position: relative;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 14px;
+        }
+
+        .search-field {
+            position: relative;
+            flex: 1;
+        }
+
+        .search-field svg {
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--dim);
+            pointer-events: none;
+        }
+
+        .search-field input {
+            width: 100%;
+            height: 44px;
+            padding: 0 40px 0 42px;
+
+            border-radius: 15px;
+            border: 1px solid var(--border);
+            background: var(--card);
+
+            font-size: 13px;
+
+            transition: border-color 0.15s ease;
+        }
+
+        .search-field input::placeholder {
+            color: var(--dim);
+        }
+
+        .search-field input:focus {
+            border-color: rgba(253, 164, 175, 0.5);
+            outline: none;
+        }
+
+        .search-clear {
+            position: absolute;
+            right: 8px;
+            top: 50%;
+            transform: translateY(-50%);
+
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            color: var(--muted);
+
+            display: none;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .search-clear.visible {
+            display: flex;
+        }
+
+        .search-clear svg {
+            position: static;
+            transform: none;
+        }
+
+
+        /* ---------- STATS ---------- */
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 7px;
+            margin-bottom: 16px;
+        }
+
+        .stat {
+            padding: 11px 4px 9px;
+            border-radius: 15px;
+            background: var(--card);
+            border: 1px solid var(--border);
+            text-align: center;
+        }
+
+        .stat strong {
+            display: block;
+            font-family: "Syne", sans-serif;
+            font-size: 18px;
+            line-height: 1.1;
+        }
+
+        .stat span {
+            display: block;
+            margin-top: 4px;
+            font-size: 9px;
+            color: var(--muted);
+            letter-spacing: 0.02em;
+        }
+
+
+        /* ---------- FILTER CHIPS ---------- */
+
+        .chips {
+            display: flex;
+            gap: 8px;
+            margin: 0 -20px 6px;
+            padding: 2px 20px 8px;
+            overflow-x: auto;
+            scrollbar-width: none;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .chips::-webkit-scrollbar {
+            display: none;
+        }
+
+        .chip {
+            flex-shrink: 0;
+            padding: 9px 15px;
+
+            border-radius: 20px;
+            border: 1px solid var(--border);
+            background: var(--card);
+            color: var(--muted);
+
+            font-size: 12px;
+            font-weight: 500;
+
+            transition: all 0.18s ease;
+        }
+
+        .chip small {
+            margin-left: 5px;
+            font-size: 10px;
+            opacity: 0.7;
+        }
+
+        .chip:hover {
+            color: var(--text-soft);
+            border-color: var(--border-hi);
+        }
+
+        .chip.active {
+            background: rgba(244, 114, 141, 0.16);
+            border-color: rgba(253, 164, 175, 0.45);
+            color: var(--accent);
+        }
+
+        .status-line {
+            margin: 4px 2px 12px;
+            min-height: 14px;
+            font-size: 11px;
+            color: var(--dim);
+        }
+
+
+        /* ---------- GRID + CARDS ---------- */
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 12px;
+        }
+
+        .card {
+            position: relative;
+
+            border-radius: 20px;
+            background: var(--card);
+            border: 1px solid var(--border);
+            overflow: hidden;
+
+            transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .grid.animate .card {
+            animation: rise 0.34s ease both;
+            animation-delay: calc(var(--i, 0) * 28ms);
+        }
+
+        .card:hover {
+            transform: translateY(-3px);
+            border-color: var(--border-hi);
+            box-shadow: 0 14px 30px rgba(0, 0, 0, 0.4);
+        }
+
+        .card:active {
+            transform: scale(0.985);
+        }
+
+        .card-hit {
+            position: absolute;
+            inset: 0;
+            z-index: 1;
+            width: 100%;
+            border-radius: inherit;
+        }
+
+        .thumb {
+            position: relative;
+            aspect-ratio: 4 / 3;
+            overflow: hidden;
+            background: linear-gradient(145deg, #221a24, #15101a);
+        }
+
+        .thumb-fallback {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--accent);
+        }
+
+        .thumb-fallback span {
+            width: 46px;
+            height: 46px;
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(253, 164, 175, 0.1);
+        }
+
+        .thumb-fallback svg {
+            width: 22px;
+            height: 22px;
+        }
+
+        .thumb img {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: filter 0.25s ease, transform 0.25s ease;
+        }
+
+        /* Discreet by default: previews are blurred until revealed */
+        .hide-previews .thumb img {
+            filter: blur(14px) saturate(0.8);
+            transform: scale(1.15);
+        }
+
+        /* Dim the blurred preview so light images don't glare */
+        .thumb::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background: rgba(12, 10, 15, 0.5);
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.25s ease;
+        }
+
+        .hide-previews .thumb::after {
+            opacity: 1;
+        }
+
+        @media (hover: hover) {
+            .hide-previews .card:hover .thumb img {
+                filter: none;
+                transform: none;
+            }
+
+            .hide-previews .card:hover .thumb::after {
+                opacity: 0;
+            }
+        }
+
+        .kebab {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            z-index: 2;
+
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            background: rgba(12, 10, 15, 0.7);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            color: var(--text-soft);
+
+            transition: background 0.15s ease, transform 0.15s ease;
+        }
+
+        .kebab:hover {
+            background: rgba(12, 10, 15, 0.92);
+            color: var(--text);
+        }
+
+        .kebab:active {
+            transform: scale(0.92);
+        }
+
+        .card-body {
+            padding: 12px 13px 13px;
+        }
+
+        .card-title {
+            font-size: 13px;
+            font-weight: 600;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .card-cat {
+            margin-top: 3px;
+            font-size: 11px;
+            color: var(--muted);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .card-foot {
+            margin-top: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 6px;
+        }
+
+        .card-date {
+            font-size: 10px;
+            color: var(--dim);
+            white-space: nowrap;
+        }
+
+
+        /* ---------- SEVERITY BADGES (subtle) ---------- */
+
+        .badge {
+            padding: 4px 8px;
+            border-radius: 20px;
+            border: 1px solid transparent;
+
+            font-size: 9px;
+            font-weight: 700;
+            letter-spacing: 0.06em;
+            white-space: nowrap;
+        }
+
+        .sev-low {
+            background: rgba(167, 243, 208, 0.08);
+            color: #a7f3d0;
+        }
+
+        .sev-medium {
+            background: rgba(252, 211, 77, 0.09);
+            color: #f5d98a;
+        }
+
+        .sev-high {
+            background: rgba(253, 164, 175, 0.12);
+            color: var(--accent);
+        }
+
+        .sev-critical {
+            background: rgba(244, 63, 94, 0.16);
+            border-color: rgba(244, 63, 94, 0.4);
+            color: #fecdd3;
+        }
+
+        .sev-unknown {
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--muted);
+        }
+
+
+        /* ---------- SKELETONS ---------- */
+
+        .skeleton {
+            border-radius: 20px;
+            background: var(--card);
+            border: 1px solid var(--border);
+            overflow: hidden;
+        }
+
+        .sk {
+            position: relative;
+            overflow: hidden;
+            background: #211a23;
+        }
+
+        .sk::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(
+                90deg,
+                transparent,
+                rgba(255, 255, 255, 0.06),
+                transparent
+            );
+            transform: translateX(-100%);
+            animation: shimmer 1.4s infinite;
+        }
+
+        .sk-thumb {
+            aspect-ratio: 4 / 3;
+        }
+
+        .sk-body {
+            padding: 13px;
+        }
+
+        .sk-line {
+            height: 10px;
+            border-radius: 6px;
+            margin-bottom: 9px;
+        }
+
+        .sk-line.w70 { width: 70%; }
+        .sk-line.w45 { width: 45%; }
+        .sk-line.w30 { width: 30%; margin-bottom: 0; }
+
+
+        /* ---------- STATE PANELS ---------- */
+
+        .state {
+            padding: 46px 22px;
+            border-radius: 24px;
+            border: 1px dashed #4a3541;
+            background: rgba(23, 19, 25, 0.8);
+            text-align: center;
+            animation: rise 0.34s ease both;
+        }
+
+        .state-icon {
+            width: 58px;
+            height: 58px;
+            margin: 0 auto 18px;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(253, 164, 175, 0.1);
+            color: var(--accent);
+        }
+
+        .state-icon svg {
+            width: 26px;
+            height: 26px;
+        }
+
+        .state h2 {
+            font-family: "Syne", sans-serif;
+            font-size: 18px;
+            margin-bottom: 8px;
+        }
+
+        .state p {
+            max-width: 280px;
+            margin: 0 auto 20px;
+            font-size: 12px;
+            line-height: 1.55;
+            color: var(--muted);
+        }
+
+
+        /* ---------- BUTTONS ---------- */
+
+        .btn {
+            padding: 11px 20px;
+            border-radius: 25px;
+            font-size: 12px;
+            font-weight: 700;
+            transition: transform 0.15s ease, filter 0.15s ease, background 0.15s ease;
+        }
+
+        .btn:active {
+            transform: scale(0.96);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .btn-primary {
+            background: var(--accent-strong);
+            color: var(--on-accent);
+        }
+
+        .btn-primary:not(:disabled):hover {
+            filter: brightness(1.07);
+        }
+
+        .btn-ghost {
+            background: rgba(255, 255, 255, 0.06);
+            color: var(--text-soft);
+        }
+
+        .btn-ghost:not(:disabled):hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .btn-danger {
+            background: rgba(244, 63, 94, 0.18);
+            border: 1px solid rgba(244, 63, 94, 0.4);
+            color: #fecdd3;
+        }
+
+        .btn-danger:not(:disabled):hover {
+            background: rgba(244, 63, 94, 0.3);
+        }
+
+
+        /* ---------- FLOATING MENU ---------- */
+
+        .menu {
+            position: fixed;
+            z-index: 60;
+            min-width: 188px;
+            padding: 6px;
+
+            border-radius: 16px;
+            border: 1px solid var(--border-hi);
+            background: rgba(29, 23, 31, 0.97);
+            backdrop-filter: blur(14px);
+            -webkit-backdrop-filter: blur(14px);
+            box-shadow: 0 18px 40px rgba(0, 0, 0, 0.55);
+
+            transform-origin: top right;
+            animation: pop 0.14s ease both;
+        }
+
+        .menu button {
+            width: 100%;
+            padding: 10px 11px;
+            border-radius: 11px;
+
+            display: flex;
+            align-items: center;
+            gap: 10px;
+
+            text-align: left;
+            font-size: 12px;
+            color: var(--text-soft);
+        }
+
+        .menu button svg {
+            width: 16px;
+            height: 16px;
+            color: var(--muted);
+        }
+
+        .menu button:hover,
+        .menu button:focus-visible {
+            background: rgba(255, 255, 255, 0.07);
+            color: var(--text);
+            outline: none;
+        }
+
+        .menu button.danger,
+        .menu button.danger svg {
+            color: #fda4af;
+        }
+
+        .menu .check {
+            margin-left: auto;
+            color: var(--accent);
+        }
+
+        .menu hr {
+            border: none;
+            height: 1px;
+            margin: 5px 4px;
+            background: var(--border);
+        }
+
+
+        /* ---------- MODALS ---------- */
+
+        .backdrop {
+            position: fixed;
+            inset: 0;
+            z-index: 50;
+
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+
+            background: rgba(5, 4, 7, 0.72);
+            backdrop-filter: blur(6px);
+            -webkit-backdrop-filter: blur(6px);
+
+            animation: fade 0.18s ease both;
+        }
+
+        .backdrop.closing {
+            animation: fade 0.16s ease reverse both;
+        }
+
+        .modal {
+            width: 100%;
+            max-width: 520px;
+            max-height: 92vh;
+            max-height: 92dvh;
+            overflow-y: auto;
+
+            padding: 22px 20px calc(22px + env(safe-area-inset-bottom, 0px));
+
+            border-radius: 26px 26px 0 0;
+            border: 1px solid var(--border-hi);
+            border-bottom: none;
+            background: #15111a;
+            box-shadow: 0 -20px 60px rgba(0, 0, 0, 0.5);
+
+            animation: sheet 0.26s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+        }
+
+        .backdrop.closing .modal {
+            animation: sheet 0.16s ease reverse both;
+        }
+
+        .modal-head {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 12px;
+            margin-bottom: 18px;
+        }
+
+        .modal-head h2 {
+            font-family: "Syne", sans-serif;
+            font-size: 18px;
+            line-height: 1.25;
+            word-break: break-word;
+        }
+
+        .modal-head p {
+            margin-top: 4px;
+            font-size: 12px;
+            color: var(--muted);
+        }
+
+        .modal-head .icon-btn {
+            width: 34px;
+            height: 34px;
+            border-radius: 12px;
+        }
+
+        .modal-text {
+            font-size: 13px;
+            line-height: 1.55;
+            color: var(--text-soft);
+            margin-bottom: 6px;
+        }
+
+        .modal-sub {
+            font-size: 11px;
+            color: var(--dim);
+            margin-bottom: 18px;
+            word-break: break-all;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .modal-actions .btn {
+            flex: 1;
+        }
+
+        .form-error {
+            margin-top: 12px;
+            min-height: 16px;
+            font-size: 12px;
+            color: var(--accent);
+        }
+
+        .field {
+            margin-bottom: 14px;
+        }
+
+        .field label {
+            display: block;
+            margin-bottom: 6px;
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--muted);
+        }
+
+        .field input,
+        .field select,
+        .field textarea {
+            width: 100%;
+            padding: 12px 13px;
+
+            border-radius: 13px;
+            border: 1px solid var(--border);
+            background: var(--field);
+
+            font-size: 13px;
+        }
+
+        .field textarea {
+            min-height: 78px;
+            resize: vertical;
+        }
+
+        .field input:focus,
+        .field select:focus,
+        .field textarea:focus {
+            border-color: rgba(253, 164, 175, 0.5);
+            outline: none;
+        }
+
+        .field-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .hint {
+            margin-top: 5px;
+            font-size: 10px;
+            color: var(--dim);
+        }
+
+        .dropzone {
+            width: 100%;
+            padding: 22px 16px;
+            margin-bottom: 16px;
+
+            border-radius: 18px;
+            border: 1px dashed #4a3541;
+            background: rgba(23, 19, 25, 0.8);
+
+            text-align: center;
+            color: var(--text-soft);
+            transition: border-color 0.15s ease, background 0.15s ease;
+        }
+
+        .dropzone:hover,
+        .dropzone.drag {
+            border-color: var(--accent);
+            background: rgba(253, 164, 175, 0.06);
+        }
+
+        .dropzone svg {
+            margin: 0 auto 8px;
+            color: var(--accent);
+        }
+
+        .dropzone strong {
+            display: block;
+            font-size: 13px;
+            margin-bottom: 3px;
+            word-break: break-all;
+        }
+
+        .dropzone small {
+            font-size: 11px;
+            color: var(--muted);
+        }
+
+
+        /* ---------- DETAIL VIEW ---------- */
+
+        .preview {
+            position: relative;
+            margin-bottom: 18px;
+            border-radius: 18px;
+            overflow: hidden;
+            background: linear-gradient(145deg, #221a24, #15101a);
+            min-height: 150px;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .preview img,
+        .preview video {
+            display: block;
+            width: 100%;
+            max-height: 52vh;
+            object-fit: contain;
+            background: #0a080c;
+        }
+
+        .preview audio {
+            width: calc(100% - 28px);
+            margin: 28px 14px;
+        }
+
+        .preview-note {
+            padding: 30px 20px;
+            text-align: center;
+            font-size: 12px;
+            line-height: 1.5;
+            color: var(--muted);
+        }
+
+        .preview-note .state-icon {
+            width: 48px;
+            height: 48px;
+            margin-bottom: 12px;
+        }
+
+        .detail-meta {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 14px;
+        }
+
+        .meta-box {
+            padding: 11px 13px;
+            border-radius: 14px;
+            background: var(--card);
+            border: 1px solid var(--border);
+            min-width: 0;
+        }
+
+        .meta-box small {
+            display: block;
+            margin-bottom: 5px;
+            font-size: 10px;
+            color: var(--dim);
+        }
+
+        .meta-box span {
+            display: block;
+            font-size: 12px;
+            font-weight: 500;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .meta-box .badge {
+            display: inline-block;
+            font-weight: 700;
+        }
+
+        .detail-summary {
+            padding: 13px 14px;
+            border-radius: 14px;
+            background: var(--card);
+            border: 1px solid var(--border);
+            font-size: 12px;
+            line-height: 1.6;
+            color: var(--text-soft);
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+
+        .tag-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-top: 12px;
+        }
+
+        .tag {
+            padding: 4px 10px;
+            border-radius: 20px;
+            background: rgba(255, 255, 255, 0.06);
+            color: var(--text-soft);
+            font-size: 10px;
+        }
+
+        .detail-actions {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-top: 18px;
+        }
+
+        .detail-actions .btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .detail-actions .btn svg {
+            width: 15px;
+            height: 15px;
+        }
+
+
+        /* ---------- TOAST ---------- */
+
+        .toast {
+            position: fixed;
+            left: 50%;
+            bottom: 96px;
+            z-index: 80;
+            transform: translateX(-50%);
+
+            max-width: calc(100% - 40px);
+            padding: 11px 18px;
+
+            border-radius: 22px;
+            border: 1px solid var(--border-hi);
+            background: rgba(29, 23, 31, 0.98);
+            box-shadow: 0 14px 34px rgba(0, 0, 0, 0.5);
+
+            font-size: 12px;
+            color: var(--text);
+
+            animation: toast-in 0.22s ease both;
+        }
+
+        .toast.error {
+            border-color: rgba(244, 63, 94, 0.45);
+            color: #fecdd3;
+        }
+
+
+        /* ---------- BOTTOM NAV (same as other pages) ---------- */
+
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 20;
+
+            width: min(100%, 430px);
+            padding: 12px 18px calc(12px + env(safe-area-inset-bottom, 0px));
+
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+
+            background: rgba(16, 13, 18, 0.96);
+            border-top: 1px solid var(--border);
+            backdrop-filter: blur(18px);
+            -webkit-backdrop-filter: blur(18px);
+        }
+
+        .nav-item {
+            background: transparent;
+            color: #756b74;
+
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .nav-item span {
+            font-size: 18px;
+        }
+
+        .nav-item small {
+            font-size: 10px;
+        }
+
+        .nav-item.active {
+            color: var(--accent);
+        }
+
+
+        /* ---------- ANIMATIONS ---------- */
+
+        @keyframes rise {
+            from { opacity: 0; transform: translateY(10px); }
+            to   { opacity: 1; transform: none; }
+        }
+
+        @keyframes fade {
+            from { opacity: 0; }
+            to   { opacity: 1; }
+        }
+
+        @keyframes sheet {
+            from { opacity: 0; transform: translateY(26px); }
+            to   { opacity: 1; transform: none; }
+        }
+
+        @keyframes pop {
+            from { opacity: 0; transform: scale(0.94); }
+            to   { opacity: 1; transform: none; }
+        }
+
+        @keyframes toast-in {
+            from { opacity: 0; transform: translate(-50%, 8px); }
+            to   { opacity: 1; transform: translate(-50%, 0); }
+        }
+
+        @keyframes shimmer {
+            to { transform: translateX(100%); }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            *,
+            *::before,
+            *::after {
+                animation-duration: 0.01ms !important;
+                animation-delay: 0ms !important;
+                transition-duration: 0.01ms !important;
+            }
+        }
+
+
+        /* ---------- RESPONSIVE ---------- */
+
+        @media (max-width: 359px) {
+
+            .grid {
+                grid-template-columns: minmax(0, 1fr);
+            }
+
+            .stat strong {
+                font-size: 15px;
+            }
+
+            .stat span {
+                font-size: 8px;
+            }
+
+            .field-row {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Tablet */
+        @media (min-width: 600px) {
+
+            .app {
+                max-width: 720px;
+                padding: 26px 28px 110px;
+            }
+
+            .chips {
+                margin: 0 -28px 6px;
+                padding: 2px 28px 8px;
+            }
+
+            .add-btn span {
+                display: inline;
+            }
+
+            .add-btn {
+                padding: 0 16px;
+            }
+
+            .header-text h1 {
+                font-size: 26px;
+            }
+
+            .stat strong {
+                font-size: 22px;
+            }
+
+            .stat span {
+                font-size: 11px;
+            }
+
+            .grid {
+                gap: 16px;
+            }
+
+            .backdrop {
+                align-items: center;
+                padding: 20px;
+            }
+
+            .modal {
+                border-radius: 26px;
+                border-bottom: 1px solid var(--border-hi);
+                padding-bottom: 22px;
+            }
+        }
+
+        /* Laptop / desktop */
+        @media (min-width: 700px) {
+
+            body {
+                display: flex;
+                justify-content: center;
+                padding: 25px;
+            }
+
+            .app {
+                min-height: 850px;
+                border-radius: 35px;
+                box-shadow: 0 30px 80px rgba(0, 0, 0, 0.65);
+            }
+
+            .bottom-nav {
+                width: min(100%, 430px);
+                bottom: 16px;
+                padding-bottom: 12px;
+                border: 1px solid var(--border);
+                border-radius: 24px;
+                box-shadow: 0 14px 40px rgba(0, 0, 0, 0.5);
+            }
+
+            .toast {
+                bottom: 100px;
+            }
+        }
+
+        @media (min-width: 980px) {
+
+            .app {
+                max-width: 1040px;
+                padding: 30px 36px 110px;
+            }
+
+            .chips {
+                margin: 0 -36px 6px;
+                padding: 2px 36px 8px;
+            }
+
+            .grid {
+                grid-template-columns: repeat(3, minmax(0, 1fr));
+            }
+        }
+
+    </style>
+</head>
+
+
+<body>
+
+<div class="app" id="app">
+
+    <!-- HEADER -->
+
+    <header class="header">
+
+        <button class="icon-btn" id="backBtn" aria-label="Back to vault"></button>
+
+        <div class="header-text">
+            <h1>Evidence</h1>
+            <p>Your secure collection</p>
+        </div>
+
+        <div class="header-actions">
+
+            <button class="icon-btn" id="searchBtn" aria-label="Search evidence"></button>
+
+            <button
+                class="icon-btn"
+                id="sortBtn"
+                aria-label="Filter and sort"
+                aria-haspopup="menu"
+            ></button>
+
+            <button class="add-btn" id="addBtn" aria-label="Add evidence">
+                <span>Add Evidence</span>
+            </button>
+
+        </div>
+
+    </header>
+
+
+    <!-- SEARCH -->
+
+    <div class="search">
+
+        <div class="search-field">
+            <input
+                type="search"
+                id="searchInput"
+                placeholder="Search evidence..."
+                autocomplete="off"
+                spellcheck="false"
+                aria-label="Search evidence"
+            >
+            <button class="search-clear" id="searchClear" aria-label="Clear search"></button>
+        </div>
+
+        <button
+            class="icon-btn"
+            id="privacyBtn"
+            aria-pressed="true"
+            aria-label="Hide previews"
+            title="Hide previews"
+        ></button>
+
+    </div>
+
+
+    <!-- STATS -->
+
+    <section class="stats" id="stats" aria-label="Evidence statistics"></section>
+
+
+    <!-- FILTER CHIPS -->
+
+    <nav class="chips" id="chips" aria-label="Filter evidence by type"></nav>
+
+    <div class="status-line" id="status" aria-live="polite"></div>
+
+
+    <!-- CONTENT: skeleton / error / empty / grid -->
+
+    <main id="content"></main>
+
+
+    <!-- NAV -->
+
+    <nav class="bottom-nav">
+
+        <button class="nav-item" onclick="window.location.href='dashboard.html'">
+            <span>⌂</span>
+            <small>Vault</small>
+        </button>
+
+        <button class="nav-item active" aria-current="page">
+            <span>▣</span>
+            <small>Evidence</small>
+        </button>
+
+        <button class="nav-item" onclick="window.location.href='timeline.html'">
+            <span>◉</span>
+            <small>Timeline</small>
+        </button>
+
+        <button class="nav-item" onclick="window.location.href='index.html'">
+            <span>◫</span>
+            <small>Decoy</small>
+        </button>
+
+    </nav>
+
+</div>
+
+
+<script>
+
+    /* =========================================================
+       SAFEVAULT — EVIDENCE GALLERY
+
+       Uses the existing backend:
+         GET    /api/evidence            list
+         POST   /api/upload              images (Gemini analysis)
+       and the Evidence Gallery endpoints added in app.py:
+         POST   /api/evidence/file       video / audio / documents
+         GET    /api/evidence/<id>/file  preview / download
+         PATCH  /api/evidence/<id>       rename / categorize
+         DELETE /api/evidence/<id>       delete
+
+       Privacy: evidence is only ever referenced by numeric id in
+       URLs, nothing is written to localStorage, and nothing about
+       evidence is logged to the console.
+       ========================================================= */
+
+    const API = "/api/evidence";
+
+    const CATEGORIES = [
+        "Threat",
+        "Harassment",
+        "Physical Abuse",
+        "Financial Abuse",
+        "Stalking",
+        "Other"
+    ];
+
+    const SEVERITIES = ["Low", "Medium", "High", "Critical"];
+
+    const FILTERS = [
+        { key: "all", label: "All" },
+        { key: "photo", label: "Photos" },
+        { key: "video", label: "Videos" },
+        { key: "audio", label: "Audio" },
+        { key: "document", label: "Documents" }
+    ];
+
+    const SORTS = [
+        { key: "newest", label: "Newest" },
+        { key: "oldest", label: "Oldest" },
+        { key: "high", label: "Highest Severity" },
+        { key: "low", label: "Lowest Severity" }
+    ];
+
+    const EXTENSIONS = {
+        photo: ["png", "jpg", "jpeg", "webp", "gif"],
+        video: ["mp4", "mov", "webm", "m4v"],
+        audio: ["mp3", "m4a", "wav", "ogg", "aac"],
+        document: ["pdf", "txt", "doc", "docx"]
+    };
+
+    // Images the existing /api/upload endpoint can analyze with Gemini
+    const AI_IMAGE_EXTENSIONS = ["png", "jpg", "jpeg", "webp"];
+
+    const MAX_FILE_BYTES = 100 * 1024 * 1024;
+
+    const state = {
+        items: [],
+        loading: true,
+        error: false,
+        filter: "all",
+        sort: "newest",
+        query: "",
+        hidePreviews: true
+    };
+
+    let loadToken = 0;
+
+
+    /* ---------- ICONS ---------- */
+
+    const svg = (d, size = 18) =>
+        `<svg viewBox="0 0 24 24" width="${size}" height="${size}" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${d}</svg>`;
+
+    const ICON = {
+        back: svg('<path d="M15 18l-6-6 6-6"/>', 20),
+        search: svg('<circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/>'),
+        sort: svg('<path d="M4 6h16M7 12h10M10 18h4"/>'),
+        plus: svg('<path d="M12 5v14M5 12h14"/>', 20),
+        dots: svg('<circle cx="5" cy="12" r="1.3" fill="currentColor"/><circle cx="12" cy="12" r="1.3" fill="currentColor"/><circle cx="19" cy="12" r="1.3" fill="currentColor"/>'),
+        photo: svg('<rect x="3" y="4" width="18" height="16" rx="3"/><circle cx="9" cy="10" r="1.6"/><path d="M21 16l-5-5-8 8"/>'),
+        video: svg('<rect x="3" y="6" width="13" height="12" rx="3"/><path d="M16 10l5-3v10l-5-3z"/>'),
+        audio: svg('<path d="M4 10v4M8 7v10M12 4v16M16 8v8M20 10v4"/>'),
+        document: svg('<path d="M7 3h7l5 5v13H7z"/><path d="M14 3v5h5M10 13h6M10 17h6"/>'),
+        eye: svg('<path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>'),
+        eyeOff: svg('<path d="M3 3l18 18"/><path d="M10.6 6.1A10 10 0 0 1 12 6c6.5 0 10 6 10 6a17 17 0 0 1-3.2 3.9M6.5 7.5C3.8 9.2 2 12 2 12s3.5 6 10 6a9.7 9.7 0 0 0 4-.9"/>'),
+        download: svg('<path d="M12 4v11M7 11l5 5 5-5M5 20h14"/>', 16),
+        upload: svg('<path d="M12 16V5M7 9l5-5 5 5M5 20h14"/>', 26),
+        pencil: svg('<path d="M4 20h4L19 9l-4-4L4 16z"/>', 16),
+        folder: svg('<path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>', 16),
+        trash: svg('<path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/>', 16),
+        open: svg('<path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/>', 16),
+        check: svg('<path d="M5 12l5 5 9-10"/>', 16),
+        close: svg('<path d="M6 6l12 12M18 6L6 18"/>', 16),
+        shield: svg('<path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/><path d="M9 12l2 2 4-4"/>'),
+        alert: svg('<circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16.5v.01"/>'),
+        none: svg('<circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3M8.5 11h5"/>')
+    };
+
+    const $ = id => document.getElementById(id);
+
+
+    /* ---------- HELPERS ---------- */
+
+    function esc(value) {
+        return String(value ?? "")
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#39;");
+    }
+
+    function extOf(name) {
+        const match = /\.([A-Za-z0-9]+)$/.exec(name || "");
+        return match ? match[1].toLowerCase() : "";
+    }
+
+    function typeOf(item) {
+
+        const t = (item.evidence_type || "").toLowerCase();
+
+        if (["image", "screenshot", "photo"].includes(t)) return "photo";
+        if (t === "video") return "video";
+        if (t === "audio" || t === "voice") return "audio";
+        if (["text", "document", "pdf", "note"].includes(t)) return "document";
+
+        const ext = extOf(item.filename);
+        for (const [kind, list] of Object.entries(EXTENSIONS)) {
+            if (list.includes(ext)) return kind;
+        }
+
+        return "document";
+    }
+
+    const TYPE_LABEL = {
+        photo: "Photo",
+        video: "Video",
+        audio: "Audio",
+        document: "Document"
+    };
+
+    function displayName(item) {
+        return item.display_name || item.filename || "Untitled";
+    }
+
+    function sevKey(item) {
+        const s = (item.severity || "").toLowerCase();
+        return SEVERITIES.some(x => x.toLowerCase() === s) ? s : "unknown";
+    }
+
+    function sevRank(item) {
+        return { critical: 4, high: 3, medium: 2, low: 1 }[sevKey(item)] || 0;
+    }
+
+    function badge(item) {
+        const key = sevKey(item);
+        const label = key === "unknown" ? "UNRATED" : key.toUpperCase();
+        return `<span class="badge sev-${key}">${label}</span>`;
+    }
+
+    function toTime(value) {
+
+        if (!value) return 0;
+
+        let t;
+
+        if (/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+            const [y, m, d] = value.split("-").map(Number);
+            t = new Date(y, m - 1, d).getTime();
+        } else {
+            t = Date.parse(String(value).replace(" ", "T") + "Z");
+        }
+
+        return Number.isNaN(t) ? 0 : t;
+    }
+
+    function itemTime(item) {
+        return toTime(item.incident_date) || toTime(item.created_at);
+    }
+
+    function formatDate(value) {
+        const t = toTime(value);
+        if (!t) return "No date";
+        return new Date(t).toLocaleDateString("en-US", {
+            month: "short",
+            day: "numeric",
+            year: "numeric"
+        });
+    }
+
+    function cardDate(item) {
+        return formatDate(item.incident_date || item.created_at);
+    }
+
+    function fileUrl(item, download = false) {
+        return `${API}/${encodeURIComponent(item.id)}/file${download ? "?download=1" : ""}`;
+    }
+
+    function findItem(id) {
+        return state.items.find(item => item.id === Number(id));
+    }
+
+    function replaceItem(updated) {
+        const index = state.items.findIndex(item => item.id === updated.id);
+        if (index !== -1) state.items[index] = updated;
+        if (currentDetail && currentDetail.id === updated.id) currentDetail.render();
+        render();
+    }
+
+    function formatBytes(bytes) {
+        if (bytes < 1024 * 1024) return Math.max(1, Math.round(bytes / 1024)) + " KB";
+        return (bytes / (1024 * 1024)).toFixed(1) + " MB";
+    }
+
+    async function request(url, options) {
+
+        let response;
+
+        try {
+            response = await fetch(url, options);
+        } catch {
+            throw new Error("Network error. Please check your connection.");
+        }
+
+        const body = await response.json().catch(() => ({}));
+
+        if (!response.ok) {
+            throw new Error(body.error || "Something went wrong.");
+        }
+
+        return body;
+    }
+
+    function jsonRequest(method, url, payload) {
+        return request(url, {
+            method,
+            headers: { "Content-Type": "application/json" },
+            body: payload === undefined ? undefined : JSON.stringify(payload)
+        });
+    }
+
+
+    /* ---------- FILTER / SORT / SEARCH ---------- */
+
+    function matchesQuery(item, q) {
+
+        if (!q) return true;
+
+        const haystack = [
+            item.filename,
+            item.display_name,
+            item.category,
+            item.summary,
+            item.severity,
+            TYPE_LABEL[typeOf(item)],
+            (item.tags || []).join(" ")
+        ].join(" ").toLowerCase();
+
+        return q.split(/\s+/).every(word => haystack.includes(word));
+    }
+
+    function getVisible() {
+
+        const q = state.query.trim().toLowerCase();
+
+        const list = state.items.filter(item =>
+            (state.filter === "all" || typeOf(item) === state.filter) &&
+            matchesQuery(item, q)
+        );
+
+        const byDate = (a, b) => itemTime(b) - itemTime(a) || b.id - a.id;
+
+        const sorters = {
+            newest: byDate,
+            oldest: (a, b) => -byDate(a, b),
+            high: (a, b) => sevRank(b) - sevRank(a) || byDate(a, b),
+            low: (a, b) => sevRank(a) - sevRank(b) || byDate(a, b)
+        };
+
+        return list.sort(sorters[state.sort]);
+    }
+
+    function counts() {
+
+        const result = { all: state.items.length, photo: 0, video: 0, audio: 0, document: 0 };
+
+        state.items.forEach(item => {
+            result[typeOf(item)] += 1;
+        });
+
+        return result;
+    }
+
+
+    /* ---------- RENDERING ---------- */
+
+    function renderStats() {
+
+        const ready = !state.loading && !state.error;
+        const c = counts();
+
+        const tiles = [
+            ["Total Items", c.all],
+            ["Photos", c.photo],
+            ["Videos", c.video],
+            ["Audio", c.audio],
+            ["Documents", c.document]
+        ];
+
+        $("stats").innerHTML = tiles.map(([label, value]) => `
+            <div class="stat">
+                <strong>${ready ? value : "–"}</strong>
+                <span>${label}</span>
+            </div>
+        `).join("");
+    }
+
+    function renderChips() {
+
+        const ready = !state.loading && !state.error;
+        const c = counts();
+
+        $("chips").innerHTML = FILTERS.map(f => `
+            <button
+                class="chip ${state.filter === f.key ? "active" : ""}"
+                data-filter="${f.key}"
+                aria-pressed="${state.filter === f.key}"
+            >${f.label}${ready ? `<small>${c[f.key]}</small>` : ""}</button>
+        `).join("");
+    }
+
+    function skeletonHtml() {
+        return `<div class="grid" aria-busy="true" aria-label="Loading evidence">` +
+            Array.from({ length: 6 }, () => `
+                <div class="skeleton">
+                    <div class="sk sk-thumb"></div>
+                    <div class="sk-body">
+                        <div class="sk sk-line w70"></div>
+                        <div class="sk sk-line w45"></div>
+                        <div class="sk sk-line w30"></div>
+                    </div>
+                </div>
+            `).join("") + `</div>`;
+    }
+
+    function stateHtml(icon, title, text, buttonId, buttonLabel) {
+        return `
+            <div class="state">
+                <div class="state-icon">${icon}</div>
+                <h2>${title}</h2>
+                <p>${text}</p>
+                <button class="btn btn-primary" id="${buttonId}">${buttonLabel}</button>
+            </div>
+        `;
+    }
+
+    function cardHtml(item, index) {
+
+        const kind = typeOf(item);
+        const name = displayName(item);
+
+        const image = kind === "photo"
+            ? `<img src="${fileUrl(item)}" alt="" loading="lazy" decoding="async">`
+            : "";
+
+        return `
+            <article class="card" data-id="${item.id}" style="--i:${Math.min(index, 12)}">
+
+                <div class="thumb">
+                    <div class="thumb-fallback"><span>${ICON[kind]}</span></div>
+                    ${image}
+                </div>
+
+                <button class="card-hit" data-open="${item.id}" aria-label="Open ${esc(name)}"></button>
+
+                <button
+                    class="kebab"
+                    data-menu="${item.id}"
+                    aria-label="More options for ${esc(name)}"
+                    aria-haspopup="menu"
+                >${ICON.dots}</button>
+
+                <div class="card-body">
+                    <h3 class="card-title" title="${esc(name)}">${esc(name)}</h3>
+                    <div class="card-cat">${esc(item.category || TYPE_LABEL[kind])}</div>
+
+                    <div class="card-foot">
+                        <span class="card-date">${esc(cardDate(item))}</span>
+                        ${badge(item)}
+                    </div>
+                </div>
+
+            </article>
+        `;
+    }
+
+    function render({ animate = false } = {}) {
+
+        renderStats();
+        renderChips();
+
+        const content = $("content");
+        const status = $("status");
+
+        $("app").classList.toggle("hide-previews", state.hidePreviews);
+
+        if (state.loading) {
+            content.innerHTML = skeletonHtml();
+            status.textContent = "";
+            return;
+        }
+
+        if (state.error) {
+            content.innerHTML = stateHtml(
+                ICON.alert,
+                "Unable to load evidence",
+                "Something went wrong while retrieving your secure collection.",
+                "retryBtn",
+                "Try Again"
+            );
+            status.textContent = "";
+            return;
+        }
+
+        if (state.items.length === 0) {
+            content.innerHTML = stateHtml(
+                ICON.shield,
+                "No evidence yet",
+                "Your secure collection is empty.",
+                "emptyAddBtn",
+                "+ Add Evidence"
+            );
+            status.textContent = "";
+            return;
+        }
+
+        const visible = getVisible();
+
+        status.textContent = visible.length === state.items.length
+            ? `${visible.length} ${visible.length === 1 ? "item" : "items"}`
+            : `Showing ${visible.length} of ${state.items.length}`;
+
+        if (visible.length === 0) {
+            content.innerHTML = stateHtml(
+                ICON.none,
+                "Nothing matches",
+                "Try a different search or filter.",
+                "clearFiltersBtn",
+                "Clear filters"
+            );
+            return;
+        }
+
+        content.innerHTML =
+            `<div class="grid ${animate ? "animate" : ""}">` +
+            visible.map(cardHtml).join("") +
+            `</div>`;
+    }
+
+
+    /* ---------- DATA LOADING ---------- */
+
+    async function loadEvidence() {
+
+        const token = ++loadToken;
+
+        state.loading = true;
+        state.error = false;
+        render();
+
+        try {
+
+            const data = await request(API);
+
+            if (token !== loadToken) return;
+
+            if (!Array.isArray(data)) throw new Error("Unexpected response");
+
+            state.items = data;
+
+        } catch {
+
+            if (token !== loadToken) return;
+
+            state.error = true;
+
+        }
+
+        state.loading = false;
+        render({ animate: true });
+    }
+
+
+    /* ---------- TOAST ---------- */
+
+    let toastTimer;
+
+    function toast(message, isError = false) {
+
+        document.querySelectorAll(".toast").forEach(el => el.remove());
+
+        const el = document.createElement("div");
+        el.className = "toast" + (isError ? " error" : "");
+        el.setAttribute("role", isError ? "alert" : "status");
+        el.textContent = message;
+        document.body.appendChild(el);
+
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(() => el.remove(), 3200);
+    }
+
+
+    /* ---------- FLOATING MENU ---------- */
+
+    let menuEl = null;
+    let menuAnchor = null;
+    let menuOpenedAt = 0;
+
+    function closeMenu({ restoreFocus = true } = {}) {
+
+        if (!menuEl) return;
+
+        menuEl.remove();
+        menuEl = null;
+
+        if (restoreFocus && menuAnchor && document.contains(menuAnchor)) {
+            menuAnchor.focus({ preventScroll: true });
+        }
+
+        menuAnchor = null;
+    }
+
+    function showMenu(anchor, items) {
+
+        closeMenu({ restoreFocus: false });
+
+        menuAnchor = anchor;
+
+        const el = document.createElement("div");
+        el.className = "menu";
+        el.setAttribute("role", "menu");
+
+        items.forEach(entry => {
+
+            if (entry === "-") {
+                el.appendChild(document.createElement("hr"));
+                return;
+            }
+
+            const button = document.createElement("button");
+            button.setAttribute("role", "menuitem");
+            button.className = entry.danger ? "danger" : "";
+            button.innerHTML = (entry.icon || "") + `<span></span>` +
+                (entry.checked ? `<i class="check">${ICON.check}</i>` : "");
+            button.querySelector("span").textContent = entry.label;
+
+            button.addEventListener("click", () => {
+                closeMenu({ restoreFocus: false });
+                entry.run();
+            });
+
+            el.appendChild(button);
+        });
+
+        document.body.appendChild(el);
+
+        // Position next to the anchor, kept inside the viewport
+        const rect = anchor.getBoundingClientRect();
+        const width = el.offsetWidth;
+        const height = el.offsetHeight;
+
+        let left = Math.min(rect.right - width, window.innerWidth - width - 10);
+        left = Math.max(10, left);
+
+        let top = rect.bottom + 6;
+        if (top + height > window.innerHeight - 10) {
+            top = Math.max(10, rect.top - height - 6);
+            el.style.transformOrigin = "bottom right";
+        }
+
+        el.style.left = left + "px";
+        el.style.top = top + "px";
+
+        menuOpenedAt = performance.now();
+        el.querySelector("button").focus({ preventScroll: true });
+
+        el.addEventListener("keydown", event => {
+
+            const buttons = [...el.querySelectorAll("button")];
+            const index = buttons.indexOf(document.activeElement);
+
+            if (event.key === "ArrowDown") {
+                event.preventDefault();
+                buttons[(index + 1) % buttons.length].focus();
+            } else if (event.key === "ArrowUp") {
+                event.preventDefault();
+                buttons[(index - 1 + buttons.length) % buttons.length].focus();
+            } else if (event.key === "Tab") {
+                closeMenu();
+            }
+        });
+
+        menuEl = el;
+    }
+
+    document.addEventListener("pointerdown", event => {
+        if (menuEl && !menuEl.contains(event.target) && !event.target.closest("[data-menu], #sortBtn")) {
+            closeMenu({ restoreFocus: false });
+        }
+    });
+
+    window.addEventListener("resize", () => closeMenu({ restoreFocus: false }));
+    window.addEventListener("scroll", event => {
+
+        // Ignore the scroll that can fire as the menu opens, or scrolling inside the menu
+        if (!menuEl || menuEl.contains(event.target)) return;
+        if (performance.now() - menuOpenedAt < 300) return;
+
+        closeMenu({ restoreFocus: false });
+
+    }, true);
+
+
+    /* ---------- DIALOGS ---------- */
+
+    const dialogs = [];
+
+    function openDialog({ title, subtitle = "", onClose }) {
+
+        closeMenu({ restoreFocus: false });
+
+        const opener = document.activeElement;
+
+        const backdrop = document.createElement("div");
+        backdrop.className = "backdrop";
+
+        const titleId = "dlg-" + Math.random().toString(36).slice(2, 8);
+
+        backdrop.innerHTML = `
+            <div class="modal" role="dialog" aria-modal="true" aria-labelledby="${titleId}">
+                <div class="modal-head">
+                    <div>
+                        <h2 id="${titleId}"></h2>
+                        ${subtitle ? `<p></p>` : ""}
+                    </div>
+                    <button class="icon-btn" data-close aria-label="Close">${ICON.close}</button>
+                </div>
+                <div class="modal-body"></div>
+            </div>
+        `;
+
+        backdrop.querySelector("h2").textContent = title;
+        if (subtitle) backdrop.querySelector(".modal-head p").textContent = subtitle;
+
+        const dialog = {
+            el: backdrop,
+            body: backdrop.querySelector(".modal-body"),
+            closed: false,
+            close() {
+
+                if (dialog.closed) return;
+                dialog.closed = true;
+
+                dialogs.splice(dialogs.indexOf(dialog), 1);
+                if (!dialogs.length) document.body.classList.remove("locked");
+
+                backdrop.classList.add("closing");
+                setTimeout(() => backdrop.remove(), 160);
+
+                if (onClose) onClose();
+
+                if (opener && document.contains(opener)) opener.focus();
+            }
+        };
+
+        backdrop.addEventListener("pointerdown", event => {
+            if (event.target === backdrop) dialog.close();
+        });
+
+        backdrop.querySelector("[data-close]").addEventListener("click", dialog.close);
+
+        dialogs.push(dialog);
+        document.body.classList.add("locked");
+        document.body.appendChild(backdrop);
+
+        return dialog;
+    }
+
+    function focusFirst(dialog) {
+        const target = dialog.body.querySelector("input, select, textarea, .btn-primary, button");
+        (target || dialog.el.querySelector("[data-close]")).focus();
+    }
+
+    document.addEventListener("keydown", event => {
+
+        const top = dialogs[dialogs.length - 1];
+
+        if (event.key === "Escape") {
+            if (menuEl) { closeMenu(); return; }
+            if (top) top.close();
+            return;
+        }
+
+        // Keep keyboard focus inside the open dialog
+        if (event.key === "Tab" && top) {
+
+            const focusable = [...top.el.querySelectorAll(
+                "button:not(:disabled), input:not(:disabled), select:not(:disabled), textarea:not(:disabled), audio[controls], video[controls]"
+            )];
+
+            if (!focusable.length) return;
+
+            const first = focusable[0];
+            const last = focusable[focusable.length - 1];
+
+            if (event.shiftKey && document.activeElement === first) {
+                event.preventDefault();
+                last.focus();
+            } else if (!event.shiftKey && document.activeElement === last) {
+                event.preventDefault();
+                first.focus();
+            } else if (!top.el.contains(document.activeElement)) {
+                event.preventDefault();
+                first.focus();
+            }
+        }
+    });
+
+
+    /* ---------- EVIDENCE DETAIL ---------- */
+
+    let currentDetail = null;
+
+    function previewHtml(item) {
+
+        const kind = typeOf(item);
+
+        if (kind === "photo") {
+            return `<img src="${fileUrl(item)}" alt="Evidence preview" data-preview>`;
+        }
+
+        if (kind === "video") {
+            return `<video controls preload="metadata" playsinline src="${fileUrl(item)}" data-preview></video>`;
+        }
+
+        if (kind === "audio") {
+            return `<audio controls preload="metadata" src="${fileUrl(item)}" data-preview></audio>`;
+        }
+
+        return previewNote(item, "Preview is not available for this file type. Use Open to view it.");
+    }
+
+    function previewNote(item, text) {
+        return `
+            <div class="preview-note">
+                <div class="state-icon">${ICON[typeOf(item)]}</div>
+                ${esc(text)}
+            </div>
+        `;
+    }
+
+    function openEvidence(id) {
+
+        const item = findItem(id);
+
+        if (!item) {
+            toast("This evidence is no longer available.", true);
+            return;
+        }
+
+        if (currentDetail) currentDetail.dialog.close();
+
+        const dialog = openDialog({
+            title: displayName(item),
+            subtitle: "Evidence details",
+            onClose() { currentDetail = null; }
+        });
+
+        const detail = { id: item.id, dialog, render: null };
+
+        detail.render = function () {
+
+            const current = findItem(detail.id);
+            if (!current) return;
+
+            const kind = typeOf(current);
+            const tags = current.tags || [];
+
+            dialog.el.querySelector("h2").textContent = displayName(current);
+
+            dialog.body.innerHTML = `
+                <div class="preview">${previewHtml(current)}</div>
+
+                <div class="detail-meta">
+                    <div class="meta-box"><small>Category</small><span>${esc(current.category || "Uncategorized")}</span></div>
+                    <div class="meta-box"><small>Severity</small><span>${badge(current)}</span></div>
+                    <div class="meta-box"><small>Incident date</small><span>${esc(formatDate(current.incident_date))}</span></div>
+                    <div class="meta-box"><small>Type · Added</small><span>${TYPE_LABEL[kind]} · ${esc(formatDate(current.created_at))}</span></div>
+                </div>
+
+                <div class="detail-summary">${esc(current.summary || "No summary available.")}</div>
+
+                ${tags.length ? `<div class="tag-row">${tags.map(t => `<span class="tag">${esc(t)}</span>`).join("")}</div>` : ""}
+
+                <div class="detail-actions">
+                    <button class="btn btn-primary" data-act="download">${ICON.download} Download</button>
+                    <button class="btn btn-ghost" data-act="open">${ICON.open} Open</button>
+                    <button class="btn btn-ghost" data-act="rename">${ICON.pencil} Rename</button>
+                    <button class="btn btn-ghost" data-act="categorize">${ICON.folder} Categorize</button>
+                    <button class="btn btn-danger" data-act="delete" style="grid-column: 1 / -1">${ICON.trash} Delete</button>
+                </div>
+            `;
+
+            // If the stored file can't be loaded, say so instead of showing a broken preview
+            const media = dialog.body.querySelector("[data-preview]");
+
+            if (media) {
+                media.addEventListener("error", () => {
+                    media.closest(".preview").innerHTML =
+                        previewNote(current, "This file can't be previewed right now. Its details are shown below.");
+                }, { once: true });
+            }
+        };
+
+        dialog.body.addEventListener("click", event => {
+
+            const button = event.target.closest("[data-act]");
+            if (!button) return;
+
+            runAction(button.dataset.act, detail.id);
+        });
+
+        currentDetail = detail;
+        detail.render();
+        focusFirst(dialog);
+    }
+
+
+    /* ---------- ACTIONS ---------- */
+
+    function runAction(action, id) {
+
+        const actions = {
+            view: () => openEvidence(id),
+            open: () => openFile(id),
+            download: () => downloadEvidence(id),
+            rename: () => renameEvidence(id),
+            categorize: () => categorizeEvidence(id),
+            delete: () => deleteEvidence(id)
+        };
+
+        if (actions[action]) actions[action]();
+    }
+
+    function openFile(id) {
+
+        const item = findItem(id);
+        if (!item) return;
+
+        // Opens in a new tab. Only the numeric id is in the URL.
+        window.open(fileUrl(item), "_blank", "noopener");
+    }
+
+    async function downloadEvidence(id) {
+
+        const item = findItem(id);
+        if (!item) return;
+
+        try {
+
+            const response = await fetch(fileUrl(item, true));
+
+            if (!response.ok) {
+                throw new Error(response.status === 404
+                    ? "No file is stored for this evidence."
+                    : "Download failed. Please try again.");
+            }
+
+            const blob = await response.blob();
+
+            let name = displayName(item);
+            const stored = extOf(item.filename);
+            if (stored && extOf(name) !== stored) name += "." + stored;
+
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement("a");
+            link.href = url;
+            link.download = name;
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+            setTimeout(() => URL.revokeObjectURL(url), 2000);
+
+        } catch (error) {
+            toast(error.message, true);
+        }
+    }
+
+    function renameEvidence(id) {
+
+        const item = findItem(id);
+        if (!item) return;
+
+        const dialog = openDialog({ title: "Rename evidence" });
+
+        dialog.body.innerHTML = `
+            <div class="field">
+                <label for="renameInput">Name</label>
+                <input id="renameInput" type="text" maxlength="255" autocomplete="off">
+            </div>
+            <div class="form-error" role="alert"></div>
+            <div class="modal-actions">
+                <button class="btn btn-ghost" data-cancel>Cancel</button>
+                <button class="btn btn-primary" data-save>Save</button>
+            </div>
+        `;
+
+        const input = dialog.body.querySelector("input");
+        const save = dialog.body.querySelector("[data-save]");
+        const error = dialog.body.querySelector(".form-error");
+
+        input.value = displayName(item);
+
+        const submit = async () => {
+
+            const value = input.value.trim();
+
+            if (!value) {
+                error.textContent = "Please enter a name.";
+                return;
+            }
+
+            if (value === displayName(item)) {
+                dialog.close();
+                return;
+            }
+
+            save.disabled = true;
+            error.textContent = "";
+
+            try {
+                const updated = await jsonRequest("PATCH", `${API}/${item.id}`, { display_name: value });
+                dialog.close();
+                replaceItem(updated);
+                toast("Renamed");
+            } catch (err) {
+                error.textContent = err.message;
+                save.disabled = false;
+            }
+        };
+
+        save.addEventListener("click", submit);
+        input.addEventListener("keydown", event => { if (event.key === "Enter") submit(); });
+        dialog.body.querySelector("[data-cancel]").addEventListener("click", dialog.close);
+
+        input.focus();
+        input.select();
+    }
+
+    function categorizeEvidence(id) {
+
+        const item = findItem(id);
+        if (!item) return;
+
+        // Offer the standard categories plus any already in use
+        const categories = [...CATEGORIES];
+        state.items.forEach(entry => {
+            if (entry.category && !categories.includes(entry.category)) categories.push(entry.category);
+        });
+
+        const option = (value, selected) =>
+            `<option value="${esc(value)}" ${selected ? "selected" : ""}>${esc(value)}</option>`;
+
+        const currentSeverity = SEVERITIES.find(s => s.toLowerCase() === (item.severity || "").toLowerCase());
+
+        const dialog = openDialog({
+            title: "Move / Categorize",
+            subtitle: displayName(item)
+        });
+
+        dialog.body.innerHTML = `
+            <div class="field">
+                <label for="catSelect">Category</label>
+                <select id="catSelect">
+                    ${item.category ? "" : `<option value="" selected disabled>Choose a category</option>`}
+                    ${categories.map(c => option(c, c === item.category)).join("")}
+                </select>
+            </div>
+            <div class="field">
+                <label for="sevSelect">Severity</label>
+                <select id="sevSelect">
+                    ${currentSeverity ? "" : `<option value="" selected disabled>Choose severity</option>`}
+                    ${SEVERITIES.map(s => option(s, s === currentSeverity)).join("")}
+                </select>
+            </div>
+            <div class="form-error" role="alert"></div>
+            <div class="modal-actions">
+                <button class="btn btn-ghost" data-cancel>Cancel</button>
+                <button class="btn btn-primary" data-save>Save</button>
+            </div>
+        `;
+
+        const save = dialog.body.querySelector("[data-save]");
+        const error = dialog.body.querySelector(".form-error");
+
+        save.addEventListener("click", async () => {
+
+            const category = $("catSelect").value;
+            const severity = $("sevSelect").value;
+
+            const changes = {};
+            if (category && category !== item.category) changes.category = category;
+            if (severity && severity !== currentSeverity) changes.severity = severity;
+
+            if (!Object.keys(changes).length) {
+                dialog.close();
+                return;
+            }
+
+            save.disabled = true;
+            error.textContent = "";
+
+            try {
+                const updated = await jsonRequest("PATCH", `${API}/${item.id}`, changes);
+                dialog.close();
+                replaceItem(updated);
+                toast("Evidence updated");
+            } catch (err) {
+                error.textContent = err.message;
+                save.disabled = false;
+            }
+        });
+
+        dialog.body.querySelector("[data-cancel]").addEventListener("click", dialog.close);
+
+        focusFirst(dialog);
+    }
+
+    function deleteEvidence(id) {
+
+        const item = findItem(id);
+        if (!item) return;
+
+        const dialog = openDialog({ title: "Delete this evidence?" });
+
+        dialog.body.innerHTML = `
+            <p class="modal-text">Once deleted, this evidence may not be recoverable.</p>
+            <p class="modal-sub"></p>
+            <div class="form-error" role="alert"></div>
+            <div class="modal-actions">
+                <button class="btn btn-ghost" data-cancel>Cancel</button>
+                <button class="btn btn-danger" data-confirm>Delete</button>
+            </div>
+        `;
+
+        dialog.body.querySelector(".modal-sub").textContent = displayName(item);
+
+        const confirmBtn = dialog.body.querySelector("[data-confirm]");
+        const error = dialog.body.querySelector(".form-error");
+
+        confirmBtn.addEventListener("click", async () => {
+
+            confirmBtn.disabled = true;
+            error.textContent = "";
+
+            try {
+
+                await jsonRequest("DELETE", `${API}/${item.id}`);
+
+                state.items = state.items.filter(entry => entry.id !== item.id);
+
+                if (currentDetail && currentDetail.id === item.id) currentDetail.dialog.close();
+
+                dialog.close();
+                render();
+                toast("Evidence deleted");
+
+            } catch (err) {
+                error.textContent = err.message;
+                confirmBtn.disabled = false;
+            }
+        });
+
+        dialog.body.querySelector("[data-cancel]").addEventListener("click", dialog.close);
+
+        // Cancel is focused first so Enter can't delete by accident
+        dialog.body.querySelector("[data-cancel]").focus();
+    }
+
+
+    /* ---------- ADD EVIDENCE ---------- */
+
+    function openAddEvidence() {
+
+        const dialog = openDialog({
+            title: "Add evidence",
+            subtitle: "Photos, videos, audio and documents"
+        });
+
+        const accept = [
+            ...Object.values(EXTENSIONS).flat().map(e => "." + e)
+        ].join(",");
+
+        dialog.body.innerHTML = `
+            <input type="file" id="addFile" accept="${accept}" hidden>
+
+            <button class="dropzone" type="button" id="dropzone">
+                ${ICON.upload}
+                <strong id="dropTitle">Choose a file</strong>
+                <small id="dropHint">Tap to browse, or drop a file here</small>
+            </button>
+
+            <div class="field-row">
+                <div class="field">
+                    <label for="addCategory">Category</label>
+                    <select id="addCategory">
+                        <option value="">Auto</option>
+                        ${CATEGORIES.map(c => `<option>${esc(c)}</option>`).join("")}
+                    </select>
+                </div>
+                <div class="field">
+                    <label for="addSeverity">Severity</label>
+                    <select id="addSeverity">
+                        <option value="">Auto</option>
+                        ${SEVERITIES.map(s => `<option>${s}</option>`).join("")}
+                    </select>
+                </div>
+            </div>
+
+            <div class="field">
+                <label for="addDate">Incident date</label>
+                <input type="date" id="addDate">
+            </div>
+
+            <div class="field">
+                <label for="addSummary">Description</label>
+                <textarea id="addSummary" maxlength="2000" placeholder="What does this show? (optional)"></textarea>
+                <div class="hint" id="autoHint">Photos (PNG, JPG, WebP) are organized automatically. Anything you fill in here takes priority.</div>
+            </div>
+
+            <div class="field">
+                <label for="addTags">Tags</label>
+                <input type="text" id="addTags" maxlength="200" placeholder="Separate with commas (optional)" autocomplete="off">
+            </div>
+
+            <div class="form-error" role="alert" id="addError"></div>
+
+            <div class="modal-actions">
+                <button class="btn btn-ghost" data-cancel>Cancel</button>
+                <button class="btn btn-primary" id="addSubmit" disabled>Save evidence</button>
+            </div>
+        `;
+
+        const fileInput = $("addFile");
+        const dropzone = $("dropzone");
+        const submit = $("addSubmit");
+        const errorBox = $("addError");
+
+        let chosen = null;
+
+        function choose(file) {
+
+            errorBox.textContent = "";
+
+            if (!file) return;
+
+            const ext = extOf(file.name);
+            const supported = Object.values(EXTENSIONS).flat().includes(ext);
+
+            if (!supported) {
+                errorBox.textContent = "This file type isn't supported.";
+                return;
+            }
+
+            if (file.size > MAX_FILE_BYTES) {
+                errorBox.textContent = "That file is too large (100 MB max).";
+                return;
+            }
+
+            chosen = file;
+            $("dropTitle").textContent = file.name;
+            $("dropHint").textContent =
+                formatBytes(file.size) +
+                (AI_IMAGE_EXTENSIONS.includes(ext) ? " · will be analyzed automatically" : "");
+
+            submit.disabled = false;
+        }
+
+        dropzone.addEventListener("click", () => fileInput.click());
+        fileInput.addEventListener("change", () => choose(fileInput.files[0]));
+
+        ["dragenter", "dragover"].forEach(name =>
+            dropzone.addEventListener(name, event => {
+                event.preventDefault();
+                dropzone.classList.add("drag");
+            })
+        );
+
+        ["dragleave", "drop"].forEach(name =>
+            dropzone.addEventListener(name, event => {
+                event.preventDefault();
+                dropzone.classList.remove("drag");
+            })
+        );
+
+        dropzone.addEventListener("drop", event => choose(event.dataTransfer.files[0]));
+
+        dialog.body.querySelector("[data-cancel]").addEventListener("click", dialog.close);
+
+        submit.addEventListener("click", async () => {
+
+            if (!chosen) return;
+
+            const ext = extOf(chosen.name);
+            const useAI = AI_IMAGE_EXTENSIONS.includes(ext);
+
+            const details = {
+                category: $("addCategory").value,
+                severity: $("addSeverity").value,
+                incident_date: $("addDate").value,
+                summary: $("addSummary").value.trim(),
+                tags: $("addTags").value.trim()
+            };
+
+            submit.disabled = true;
+            dropzone.disabled = true;
+            errorBox.textContent = "";
+            submit.textContent = useAI ? "Analyzing…" : "Saving…";
+
+            try {
+
+                const form = new FormData();
+                form.append("file", chosen);
+
+                let created;
+
+                if (useAI) {
+
+                    // Existing upload flow: saves the file and runs the Gemini analysis
+                    created = await request("/api/upload", { method: "POST", body: form });
+
+                    // Apply anything the person filled in themselves
+                    const overrides = {};
+                    Object.entries(details).forEach(([key, value]) => {
+                        if (value) overrides[key] = value;
+                    });
+
+                    if (Object.keys(overrides).length) {
+                        try {
+                            await jsonRequest("PATCH", `${API}/${created.id}`, overrides);
+                        } catch {
+                            toast("Saved, but your details couldn't be applied.", true);
+                        }
+                    }
+
+                } else {
+
+                    Object.entries(details).forEach(([key, value]) => form.append(key, value));
+                    created = await request(`${API}/file`, { method: "POST", body: form });
+
+                }
+
+                dialog.close();
+
+                // Show the new item right away
+                state.filter = "all";
+                state.query = "";
+                $("searchInput").value = "";
+                updateSearchClear();
+
+                await loadEvidence();
+
+                if (!state.error) toast("Evidence saved");
+
+            } catch (err) {
+                errorBox.textContent = err.message;
+                submit.disabled = false;
+                dropzone.disabled = false;
+                submit.textContent = "Save evidence";
+            }
+        });
+
+        dropzone.focus();
+    }
+
+
+    /* ---------- EVENT WIRING ---------- */
+
+    function updateSearchClear() {
+        $("searchClear").classList.toggle("visible", state.query.length > 0);
+    }
+
+    function clearFilters() {
+        state.filter = "all";
+        state.query = "";
+        $("searchInput").value = "";
+        updateSearchClear();
+        render({ animate: true });
+    }
+
+    function openSortMenu() {
+
+        const items = SORTS.map(option => ({
+            label: option.label,
+            checked: state.sort === option.key,
+            run() {
+                state.sort = option.key;
+                render({ animate: true });
+            }
+        }));
+
+        showMenu($("sortBtn"), items);
+    }
+
+    function setPrivacy() {
+
+        $("privacyBtn").innerHTML = state.hidePreviews ? ICON.eyeOff : ICON.eye;
+        $("privacyBtn").setAttribute("aria-pressed", String(state.hidePreviews));
+
+        const label = state.hidePreviews ? "Previews hidden. Tap to show." : "Previews shown. Tap to hide.";
+        $("privacyBtn").setAttribute("aria-label", label);
+        $("privacyBtn").title = label;
+
+        $("app").classList.toggle("hide-previews", state.hidePreviews);
+    }
+
+    function init() {
+
+        $("backBtn").innerHTML = ICON.back;
+        $("searchBtn").innerHTML = ICON.search;
+        $("sortBtn").innerHTML = ICON.sort;
+        $("addBtn").insertAdjacentHTML("afterbegin", ICON.plus);
+        $("searchClear").innerHTML = ICON.close;
+        $("searchInput").insertAdjacentHTML("beforebegin", ICON.search);
+
+        setPrivacy();
+
+        $("backBtn").addEventListener("click", () => { window.location.href = "dashboard.html"; });
+        $("addBtn").addEventListener("click", openAddEvidence);
+        $("sortBtn").addEventListener("click", openSortMenu);
+
+        $("searchBtn").addEventListener("click", () => {
+            $("searchInput").scrollIntoView({ block: "center", behavior: "smooth" });
+            $("searchInput").focus();
+        });
+
+        $("searchInput").addEventListener("input", event => {
+            state.query = event.target.value;
+            updateSearchClear();
+            render();
+        });
+
+        $("searchClear").addEventListener("click", () => {
+            state.query = "";
+            $("searchInput").value = "";
+            updateSearchClear();
+            render();
+            $("searchInput").focus();
+        });
+
+        $("privacyBtn").addEventListener("click", () => {
+            state.hidePreviews = !state.hidePreviews;
+            setPrivacy();
+        });
+
+        $("chips").addEventListener("click", event => {
+
+            const chip = event.target.closest("[data-filter]");
+            if (!chip) return;
+
+            state.filter = chip.dataset.filter;
+            render({ animate: true });
+
+            // Keep the active chip in view on small screens
+            const active = $("chips").querySelector(".chip.active");
+            if (active) active.scrollIntoView({ inline: "center", block: "nearest", behavior: "smooth" });
+        });
+
+        $("content").addEventListener("click", event => {
+
+            const target = event.target;
+
+            if (target.closest("#retryBtn")) { loadEvidence(); return; }
+            if (target.closest("#emptyAddBtn")) { openAddEvidence(); return; }
+            if (target.closest("#clearFiltersBtn")) { clearFilters(); return; }
+
+            const menuButton = target.closest("[data-menu]");
+
+            if (menuButton) {
+
+                const id = Number(menuButton.dataset.menu);
+
+                showMenu(menuButton, [
+                    { label: "View", icon: ICON.open, run: () => runAction("view", id) },
+                    { label: "Download", icon: ICON.download, run: () => runAction("download", id) },
+                    { label: "Rename", icon: ICON.pencil, run: () => runAction("rename", id) },
+                    { label: "Move / Categorize", icon: ICON.folder, run: () => runAction("categorize", id) },
+                    "-",
+                    { label: "Delete", icon: ICON.trash, danger: true, run: () => runAction("delete", id) }
+                ]);
+
+                return;
+            }
+
+            const openButton = target.closest("[data-open]");
+            if (openButton) openEvidence(Number(openButton.dataset.open));
+        });
+
+        // A thumbnail that fails to load falls back to the file-type icon
+        $("content").addEventListener("error", event => {
+            if (event.target.tagName === "IMG") event.target.remove();
+        }, true);
+
+        loadEvidence();
+    }
+
+    init();
+
+</script>
+
+</body>
+</html>

@@ -6,6 +6,8 @@
 
     <title>SafeVault</title>
 
+    <script src="security.js"></script>
+
     <link
         href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Syne:wght@500;600;700&display=swap"
         rel="stylesheet"
@@ -39,6 +41,7 @@
             width: 100%;
             max-width: 430px;
             min-height: 100vh;
+            min-height: 100dvh;
             margin: auto;
             padding: 22px 20px 100px;
 
@@ -92,7 +95,7 @@
         .brand small {
             display: block;
             color: #8e818b;
-            font-size: 10px;
+            font-size: 11px;
             margin-bottom: 2px;
         }
 
@@ -106,6 +109,10 @@
             height: 40px;
 
             border-radius: 50%;
+
+            display: flex;
+            justify-content: center;
+            align-items: center;
 
             background: #1d171f;
             color: #fda4af;
@@ -168,7 +175,7 @@
         }
 
         .section-title span {
-            font-size: 10px;
+            font-size: 11px;
             color: #786c75;
         }
 
@@ -195,9 +202,20 @@
             transition: 0.2s;
         }
 
-        .action:hover {
+        .action:not(:disabled):hover {
             transform: translateY(-2px);
             border-color: #f43f5e;
+        }
+
+        .action:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        button:focus-visible,
+        .upload-button:focus-visible {
+            outline: 2px solid #fda4af;
+            outline-offset: 2px;
         }
 
         .action-icon {
@@ -224,7 +242,24 @@
 
         .action small {
             color: #80747d;
-            font-size: 9px;
+            font-size: 11px;
+        }
+
+
+        .view-all {
+            color: #fda4af;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .view-all:hover {
+            text-decoration: underline;
+        }
+
+        .view-all:focus-visible {
+            outline: 2px solid #fda4af;
+            outline-offset: 2px;
+            border-radius: 4px;
         }
 
 
@@ -252,7 +287,7 @@
 
         .upload-box p {
             color: #80747d;
-            font-size: 10px;
+            font-size: 12px;
             margin-bottom: 17px;
         }
 
@@ -278,7 +313,7 @@
 
         #uploadStatus {
             margin-top: 13px;
-            font-size: 10px;
+            font-size: 12px;
             color: #fda4af;
         }
 
@@ -327,12 +362,12 @@
             background: rgba(244, 63, 94, 0.12);
             color: #fda4af;
 
-            font-size: 8px;
+            font-size: 10px;
         }
 
         .evidence p {
             color: #887b84;
-            font-size: 10px;
+            font-size: 12px;
             line-height: 1.5;
         }
 
@@ -343,7 +378,7 @@
             margin-top: 10px;
 
             color: #665c64;
-            font-size: 8px;
+            font-size: 10px;
         }
 
 
@@ -387,7 +422,7 @@
         }
 
         .nav-item small {
-            font-size: 8px;
+            font-size: 10px;
         }
 
         .nav-item.active {
@@ -440,8 +475,8 @@
 
         </div>
 
-        <button class="lock">
-            ♢
+        <button class="lock" aria-label="Lock vault" title="Lock Vault" onclick="lockVault()">
+            🔒
         </button>
 
     </header>
@@ -512,7 +547,7 @@
         </button>
 
 
-        <button class="action">
+        <button class="action" disabled>
 
             <div class="action-icon">
                 ◉
@@ -582,7 +617,11 @@
 
         <h3>Recent Evidence</h3>
 
-        <span id="evidenceCount">Loading...</span>
+        <span>
+            <span id="evidenceCount">Loading...</span>
+            &middot;
+            <a href="evidence.html" class="view-all">View all</a>
+        </span>
 
     </div>
 
@@ -624,7 +663,10 @@
         </button>
 
 
-        <button class="nav-item">
+        <button
+            class="nav-item"
+            onclick="window.location.href='timeline.html'"
+        >
 
             <span>◉</span>
             <small>Timeline</small>
@@ -632,7 +674,7 @@
         </button>
 
 
-        <button class="nav-item" onclick="window.location.href='timeline.html'"></button>
+        <button class="nav-item">
 
             <span>♙</span>
             <small>Profile</small>
@@ -648,21 +690,22 @@
 
     const fileInput = document.getElementById("fileInput");
     const uploadStatus = document.getElementById("uploadStatus");
+    const evidenceList = document.getElementById("evidenceList");
+    const evidenceCount = document.getElementById("evidenceCount");
 
-    fileInput.addEventListener("change", async function () {
+    fileInput.addEventListener("change", async () => {
 
-        const file = this.files[0];
+        const file = fileInput.files[0];
 
         if (!file) {
             return;
         }
 
+        fileInput.disabled = true;
         uploadStatus.textContent = "Analyzing evidence with Gemini...";
 
         const formData = new FormData();
-
         formData.append("file", file);
-
 
         try {
 
@@ -671,132 +714,86 @@
                 body: formData
             });
 
-
-            const result = await response.json();
-
+            const result = await response.json().catch(() => ({}));
 
             if (!response.ok) {
-
-                throw new Error(
-                    result.error || "Upload failed"
-                );
-
+                throw new Error(result.error || "Upload failed");
             }
 
-
-            uploadStatus.textContent =
-                "✓ Evidence analyzed and saved.";
-
-
+            uploadStatus.textContent = "✓ Evidence analyzed and saved.";
             loadEvidence();
 
         } catch (error) {
 
             console.error(error);
+            uploadStatus.textContent = "Something went wrong. Please try again.";
 
-            uploadStatus.textContent =
-                "Something went wrong. Please try again.";
+        } finally {
+
+            // reset so the same file can be chosen again
+            fileInput.value = "";
+            fileInput.disabled = false;
 
         }
 
     });
 
 
+    function showMessage(text) {
+        evidenceList.innerHTML = `<div class="evidence"><p>${text}</p></div>`;
+    }
+
+
     async function loadEvidence() {
-
-        const evidenceList =
-            document.getElementById("evidenceList");
-
-        const evidenceCount =
-            document.getElementById("evidenceCount");
-
 
         try {
 
-            const response =
-                await fetch("/api/evidence");
+            const response = await fetch("/api/evidence");
 
-            const evidence =
-                await response.json();
-
-
-            evidenceCount.textContent =
-                evidence.length + " items";
-
-
-            if (evidence.length === 0) {
-
-                evidenceList.innerHTML = `
-                    <div class="evidence">
-                        <p>No evidence added yet.</p>
-                    </div>
-                `;
-
-                return;
-
+            if (!response.ok) {
+                throw new Error("Could not load evidence");
             }
 
+            const evidence = await response.json();
 
-            evidenceList.innerHTML =
-                evidence
-                .slice()
+            evidenceCount.textContent = evidence.length + " items";
+
+            if (evidence.length === 0) {
+                showMessage("No evidence added yet.");
+                return;
+            }
+
+            evidenceList.innerHTML = evidence
+                .slice(-5)
                 .reverse()
-                .slice(0, 5)
                 .map(item => `
-
                     <div class="evidence">
 
                         <div class="evidence-top">
-
                             <div class="evidence-name">
                                 ${escapeHtml(item.filename)}
                             </div>
-
                             <div class="severity">
                                 ${escapeHtml(item.severity || "Unknown")}
                             </div>
-
                         </div>
 
-                        <p>
-                            ${escapeHtml(
-                                item.summary ||
-                                "No summary available."
-                            )}
-                        </p>
+                        <p>${escapeHtml(item.summary || "No summary available.")}</p>
 
                         <div class="evidence-meta">
-
-                            <span>
-                                ${escapeHtml(
-                                    item.category || "Other"
-                                )}
-                            </span>
-
-                            <span>
-                                ${escapeHtml(
-                                    item.incident_date ||
-                                    "No date"
-                                )}
-                            </span>
-
+                            <span>${escapeHtml(item.category || "Other")}</span>
+                            <span>${escapeHtml(item.incident_date || "No date")}</span>
                         </div>
 
                     </div>
-
                 `)
                 .join("");
-
 
         } catch (error) {
 
             console.error(error);
-
-            evidenceList.innerHTML = `
-                <div class="evidence">
-                    <p>Unable to load evidence.</p>
-                </div>
-            `;
+            evidenceCount.textContent = "Error";
+            showMessage("Unable to load evidence.");
 
         }
 
@@ -806,9 +803,7 @@
     function escapeHtml(value) {
 
         const div = document.createElement("div");
-
         div.textContent = value ?? "";
-
         return div.innerHTML;
 
     }
