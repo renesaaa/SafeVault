@@ -1,0 +1,28 @@
+services:
+  - type: web
+    name: safevault
+    runtime: python
+    plan: free            # free = NO persistent storage; see the disk block below
+    branch: main
+    buildCommand: pip install -r requirements.txt
+    # --chdir backend: app.py uses `from database import ...`, so it must run
+    # from inside backend/. ONE worker: unlock sessions and PIN lockout
+    # counters are kept in memory and are not shared between processes.
+    startCommand: gunicorn --chdir backend app:app --bind 0.0.0.0:$PORT --workers 1 --threads 4 --timeout 120
+    healthCheckPath: /health
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.3
+      - key: SECRET_KEY
+        generateValue: true
+      - key: SAFEVAULT_PIN
+        sync: false
+      - key: GEMINI_API_KEY
+        sync: false
+    # To keep evidence + database across restarts/deploys, upgrade `plan` to
+    # starter (or higher), uncomment the block below AND add the env var
+    # SAFEVAULT_STORAGE_PATH=/var/data
+    # disk:
+    #   name: safevault-data
+    #   mountPath: /var/data
+    #   sizeGB: 1
